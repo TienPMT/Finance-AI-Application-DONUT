@@ -1,0 +1,9 @@
+# torch cai rieng (CPU): uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+# GPU NVIDIA: uv pip install torch  (mac dinh CUDA, ~3GB)
+fastapi
+uvicorn[standard]
+python-multipart
+pillow
+transformers
+sentencepiece
+scikit-learn

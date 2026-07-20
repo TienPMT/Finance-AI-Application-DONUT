@@ -1,0 +1,43 @@
+<div class="recommendation-list">
+  {% for item in recommendations %}
+    <article class="recommendation-card">
+      <div class="recommendation-heading">
+        <div>
+          <span class="stock-code">{{ item.product_source_id }}</span>
+          <h3 lang="en" translate="no">{{ item.product_name }}</h3>
+        </div>
+        <strong>£{{ "%.2f"|format(item.unit_price) }}</strong>
+      </div>
+      <div class="score-line">
+        <span>{{ "Gợi ý phổ biến" if item.is_fallback else "Khớp mẫu tuần tự" }}</span>
+        <strong>Điểm {{ "%.3f"|format(item.score) }}</strong>
+      </div>
+      <details>
+        <summary>Xem bằng chứng</summary>
+        {% for explanation in item.explanations[:3] %}
+          <div class="evidence">
+            {% if item.is_fallback %}
+              <p>Xếp hạng theo độ phổ biến và trọng số giá trị.</p>
+            {% else %}
+              <p>Support: {{ explanation.support }}</p>
+              <p>Điểm đóng góp: {{ "%.3f"|format(explanation.pattern_score) }}</p>
+              <p>Sản phẩm đã khớp: {{ explanation.matched_cart_items|join(", ") }}</p>
+              <p class="raw-pattern">Mẫu gốc: {{ explanation.raw_pattern }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </details>
+      <button
+        class="button secondary full-width"
+        type="button"
+        data-add-to-cart="{{ item.product_id }}"
+        data-product-name="{{ item.product_name }}"
+      >Thêm sản phẩm này</button>
+    </article>
+  {% else %}
+    <div class="empty-state">
+      <h3>Chưa có gợi ý</h3>
+      <p>Thêm sản phẩm vào giỏ để hệ thống tìm mẫu phù hợp.</p>
+    </div>
+  {% endfor %}
+</div>

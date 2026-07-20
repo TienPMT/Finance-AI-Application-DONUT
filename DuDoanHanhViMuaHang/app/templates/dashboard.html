@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Tổng quan | KPDL Retail Analytics{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">CM-SPADE + chấm điểm theo giá trị</p>
+    <h1>Phân tích bán lẻ và gợi ý mua kèm</h1>
+    <p class="hero-copy">Khám phá dữ liệu giao dịch, mẫu mua hàng tuần tự và các gợi ý có thể truy vết đến bằng chứng khai phá.</p>
+  </div>
+  <a class="button primary" href="/products">Khám phá sản phẩm</a>
+</section>
+
+<section aria-labelledby="metrics-title">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Lần khai phá mới nhất</p>
+      <h2 id="metrics-title">{{ stats.dataset_name }}</h2>
+    </div>
+    <span class="muted">Cập nhật {{ stats.run_timestamp }}</span>
+  </div>
+  <div class="metric-grid">
+    <article class="metric"><span>Chuỗi khách hàng</span><strong>{{ "{:,}".format(stats.sequence_count) }}</strong></article>
+    <article class="metric"><span>Sản phẩm</span><strong>{{ "{:,}".format(stats.product_count) }}</strong></article>
+    <article class="metric"><span>Mẫu tuần tự</span><strong>{{ "{:,}".format(stats.pattern_count) }}</strong></article>
+    <article class="metric"><span>MinSup</span><strong>{{ "%.1f%%"|format(stats.minsup * 100) }}</strong></article>
+  </div>
+</section>
+
+<section aria-labelledby="top-patterns-title">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Bằng chứng khai phá</p>
+      <h2 id="top-patterns-title">Mẫu nổi bật</h2>
+    </div>
+    <a class="text-link" href="/patterns">Xem tất cả</a>
+  </div>
+  <div class="pattern-list">
+    {% for view in patterns %}
+      <article class="pattern-card">
+        <div class="pattern-flow">
+          {% for itemset in view.itemsets_products %}
+            {% set is_last_itemset = loop.last %}
+            {% if not loop.first %}<span aria-hidden="true">→</span>{% endif %}
+            <div>{% for product in itemset %}<span class="chip{{ ' outcome' if is_last_itemset else '' }}">{{ product.product_source_id }}</span>{% endfor %}</div>
+          {% endfor %}
+        </div>
+        <dl class="inline-stats">
+          <div><dt>Support</dt><dd>{{ view.pattern.support }}</dd></div>
+          <div><dt>Điểm</dt><dd>{{ "%.3f"|format(view.pattern.pattern_score) }}</dd></div>
+        </dl>
+      </article>
+    {% else %}
+      <p class="empty-state">Chưa có mẫu tuần tự trong lần khai phá này.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

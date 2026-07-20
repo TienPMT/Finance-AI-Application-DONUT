@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Mẫu tuần tự | KPDL Retail Analytics{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">Pattern Explorer</p>
+  <h1>Mẫu tuần tự</h1>
+  <p>Các mẫu của lần khai phá mới nhất, xếp theo điểm giá trị và support.</p>
+</section>
+
+<div class="table-shell">
+  <table>
+    <thead>
+      <tr>
+        <th>Chuỗi gốc</th>
+        <th>Tiền đề → Hệ quả</th>
+        <th>Support</th>
+        <th>Tỷ lệ</th>
+        <th>Trọng số</th>
+        <th>Điểm</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for view in patterns %}
+        <tr>
+          <td><code class="raw-pattern">{{ view.pattern.raw_pattern }}</code></td>
+          <td>
+            <div class="pattern-flow">
+              {% for itemset in view.itemsets_products %}
+                {% set is_last_itemset = loop.last %}
+                {% if not loop.first %}<span aria-hidden="true">→</span>{% endif %}
+                <div>{% for product in itemset %}<span class="chip{{ ' outcome' if is_last_itemset else '' }}" title="{{ product.product_name }}">{{ product.product_source_id }}</span>{% endfor %}</div>
+              {% endfor %}
+            </div>
+          </td>
+          <td data-label="Support">{{ view.pattern.support }}</td>
+          <td data-label="Tỷ lệ">{{ "%.2f%%"|format(view.pattern.support_ratio * 100) }}</td>
+          <td data-label="Trọng số">{{ "%.3f"|format(view.pattern.weight_value) }}</td>
+          <td data-label="Điểm"><strong>{{ "%.3f"|format(view.pattern.pattern_score) }}</strong></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">Chưa có mẫu tuần tự.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

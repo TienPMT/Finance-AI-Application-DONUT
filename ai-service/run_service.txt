@@ -1,0 +1,33 @@
+==========================================================
+ ai-service (Donut OCR + WCM-SPADE) — SETUP & RUN
+==========================================================
+LUU Y: Python he thong = 3.14 -> torch CHUA co wheel 3.14.
+       Phai dung Python 3.12 trong venv. Dung uv cho nhanh.
+
+--- LAN DAU (one-time) ---
+# 1. Cai uv (khong can sudo)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Tao venv Python 3.12 (uv tu tai python)
+cd ai-service
+uv venv --python 3.12
+
+# 3. Cai thu vien
+uv pip install -r requirements.txt
+   # gom: fastapi uvicorn[standard] torch transformers pillow sentencepiece python-multipart
+   # torch ~2GB -> lan dau tai lau
+
+--- CHAY SERVICE (moi lan) ---
+cd ai-service
+uv run uvicorn ai_service:app --host 0.0.0.0 --port 8000 --reload
+
+   # HOAC: source .venv/bin/activate; uvicorn ai_service:app --host 0.0.0.0 --port 8000 --reload
+
+--- LOI THUONG GAP ---
+zsh: command not found: uvicorn
+  -> uvicorn nam trong .venv, khong phai global.
+     Phai "uv run ..." HOAC "source .venv/bin/activate" truoc.
+
+Endpoint: POST /donut/scan (OCR hoa don) | POST /spade/analyze (WCM-SPADE)
+Swagger:  http://localhost:8000/docs
+==========================================================

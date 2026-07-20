@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Giỏ hàng | KPDL Retail Analytics{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <h1>Giỏ hàng</h1>
+</section>
+
+<div class="cart-layout" data-cart-page>
+  <section aria-labelledby="cart-items-title">
+    <div class="section-heading">
+      <h2 id="cart-items-title">Sản phẩm đã chọn</h2>
+      <button class="button ghost" type="button" data-clear-cart>Xóa giỏ</button>
+    </div>
+    <div class="cart-items">
+      {% for product in cart_products %}
+        <article class="cart-item" data-cart-item="{{ product.item_id }}">
+          <div>
+            <span class="stock-code">{{ product.product_source_id }}</span>
+            <h3 lang="en" translate="no">{{ product.product_name }}</h3>
+          </div>
+          <strong>£{{ "%.2f"|format(product.unit_price) }}</strong>
+          <button class="icon-button" type="button" data-remove-from-cart="{{ product.item_id }}" aria-label="Xóa {{ product.product_name }}">×</button>
+        </article>
+      {% else %}
+        <div class="empty-state">
+          <h2>Giỏ hàng chưa có sản phẩm</h2>
+          <p>Chọn sản phẩm để xem gợi ý mua kèm theo mẫu tuần tự.</p>
+          <a class="button primary" href="/products">Khám phá sản phẩm</a>
+        </div>
+      {% endfor %}
+    </div>
+    {% if cart_products %}
+      <div class="cart-summary">
+        <span>{{ cart_products|length }} sản phẩm</span>
+        <span>Tổng giá tham khảo <strong>£{{ "%.2f"|format(cart_total) }}</strong></span>
+      </div>
+    {% endif %}
+  </section>
+  <aside class="recommendation-panel" aria-labelledby="recommendation-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Top 5 ứng viên</p>
+        <h2 id="recommendation-title">Gợi ý mua kèm</h2>
+      </div>
+    </div>
+    <div data-recommendations style="max-height: calc(100vh - 200px); overflow-y: auto;">
+      {% include "fragments/recommendations.html" %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

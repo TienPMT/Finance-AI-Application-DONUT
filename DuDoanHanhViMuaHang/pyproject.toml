@@ -1,0 +1,30 @@
+[project]
+name = "kpdl-product-recommendation-demo"
+version = "0.1.0"
+description = "Retail analytics demo for CM-SPADE bundled product recommendations."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0,<1.0.0",
+    "jinja2>=3.1.4,<4.0.0",
+    "openpyxl>=3.1.5,<4.0.0",
+    "pandas>=2.2.3,<3.0.0",
+    "pydantic>=2.9.2,<3.0.0",
+    "uvicorn[standard]>=0.30.6,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.28.0,<1.0.0",
+    "pytest>=8.3.3,<10.0.0",
+]
+
+[build-system]
+requires = ["hatchling>=1.25.0,<2.0.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app", "mining"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

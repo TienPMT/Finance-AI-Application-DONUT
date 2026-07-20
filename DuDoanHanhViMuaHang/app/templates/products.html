@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Sản phẩm | KPDL Retail Analytics{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">Dữ liệu thật từ Online Retail II</p>
+  <h1>Danh mục sản phẩm</h1>
+  <p>Tìm theo tên hoặc mã, lọc theo giá và độ phổ biến giao dịch.</p>
+</section>
+
+<form class="filter-bar" method="get" action="/products">
+  <label class="search-field">
+    <span>Tìm sản phẩm</span>
+    <input name="q" value="{{ filters.q }}" placeholder="Tên hoặc mã sản phẩm">
+  </label>
+  <label>
+    <span>Giá từ</span>
+    <input name="min_price" type="number" min="0" step="0.01" value="{{ filters.min_price if filters.min_price is not none else '' }}">
+  </label>
+  <label>
+    <span>Giá đến</span>
+    <input name="max_price" type="number" min="0" step="0.01" value="{{ filters.max_price if filters.max_price is not none else '' }}">
+  </label>
+  <label>
+    <span>Sắp xếp</span>
+    <select name="sort">
+      <option value="popular" {% if filters.sort == "popular" %}selected{% endif %}>Phổ biến nhất</option>
+      <option value="price_asc" {% if filters.sort == "price_asc" %}selected{% endif %}>Giá tăng dần</option>
+      <option value="price_desc" {% if filters.sort == "price_desc" %}selected{% endif %}>Giá giảm dần</option>
+    </select>
+  </label>
+  <button class="button primary" type="submit">Áp dụng</button>
+</form>
+
+<div class="product-grid">
+  {% for product in products %}
+    <article class="product-card">
+      <div class="product-meta">
+        <span class="stock-code">{{ product.product_source_id }}</span>
+        {% if product.country %}<span class="muted">{{ product.country }}</span>{% endif %}
+      </div>
+      <h2 lang="en" translate="no" title="{{ product.product_name }}">{{ product.product_name }}</h2>
+      <dl class="product-stats">
+        <div><dt>Giá tham khảo</dt><dd>£{{ "%.2f"|format(product.unit_price) }}</dd></div>
+        <div><dt>Giao dịch</dt><dd>{{ product.transaction_count }}</dd></div>
+      </dl>
+      <button
+        class="button secondary full-width"
+        type="button"
+        data-add-to-cart="{{ product.item_id }}"
+        data-product-name="{{ product.product_name }}"
+      >Thêm vào giỏ</button>
+    </article>
+  {% else %}
+    <div class="empty-state wide">
+      <h2>Không tìm thấy sản phẩm</h2>
+      <p>Thử thay đổi từ khóa hoặc khoảng giá.</p>
+      <a class="button secondary" href="/products">Xóa bộ lọc</a>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

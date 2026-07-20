@@ -1,0 +1,29 @@
+{
+  "experiment": "minsup-0.02",
+  "dataset": "online-retail-ii",
+  "minsup": 0.02,
+  "timestamp": "2026-06-14T20:38:31.783680+00:00",
+  "mining": {
+    "sequence_count": 4258,
+    "pattern_count": 75762,
+    "scored_pattern_count": 53099,
+    "runtime_seconds": 14.546,
+    "run_id": 1
+  },
+  "evaluation": {
+    "k": 5,
+    "test_basket_count": 4258,
+    "baseline": {
+      "basket_count": 4258,
+      "hit_rate@5": 0.058008,
+      "precision@5": 0.012588,
+      "recall@5": 0.006538
+    },
+    "proposed": {
+      "basket_count": 4258,
+      "hit_rate@5": 0.147722,
+      "precision@5": 0.03742,
+      "recall@5": 0.012448
+    }
+  }
+}

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WCM-SPADE · Bank Data · Khai Phá Dữ Liệu</title>
+<style>
+  :root { 
+    --bg: #F4F4F6; 
+    --panel: #FFFFFF; 
+    --line: #E7E7EC; 
+    --primary: #4A2545; 
+    --mint: #4A2545; 
+    --amber: #FFC24B; 
+    --text: #1F1B24; 
+    --gray: #9A9AA0; 
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,Segoe UI,Roboto,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.5; }
+  header { background:var(--primary); color:white; padding:2rem; text-align:center; }
+  header h1 { margin:0; font-size:1.8rem; }
+  header small { display:block; opacity:0.8; margin-top:0.5rem; font-weight:normal; }
+  .badge { background:rgba(255,255,255,0.2); font-size:0.8rem; padding:2px 8px; border-radius:4px; vertical-align:middle; }
+  
+  .wrap { max-width:1100px; margin:0 auto; padding:2rem; }
+  .controls { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; align-items:flex-end; 
+              background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:1.5rem; }
+  .ctl { display:flex; flex-direction:column; gap:4px; }
+  label { font-size:0.8rem; color:var(--gray); font-weight:bold; }
+  input, select { background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 12px; border-radius:8px; font-size:0.9rem; }
+  .ctl .val { color:var(--primary); font-weight:600; }
+  button { background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:bold; }
+  button:hover { filter: brightness(1.2); }
+  button:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .card { background:var(--panel); border-radius:16px; padding:1.5rem; margin-bottom:1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--line); }
+  table { width:100%; border-collapse:collapse; margin-top:1rem; font-size:0.9rem; }
+  th { text-align:left; color:var(--gray); border-bottom:2px solid var(--line); padding:8px; }
+  td { padding:8px; border-bottom:1px solid var(--line); }
+  tr:last-child td { border-bottom:none; }
+  .meta { color:var(--gray); font-size:13px; margin:6px 0 22px; line-height:1.6; }
+  .meta b { color:var(--text); }
+  .err { color:#E0457B; }
+
+  .spin { display:inline-block; width:16px; height:16px; border:3px solid var(--line);
+          border-top-color:var(--primary); border-radius:50%; animation:s 1s linear infinite;
+          vertical-align:middle; margin-right:8px; }
+  @keyframes s { to { transform:rotate(360deg); } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<header>
+  <h1>WCM-SPADE trên Dữ liệu Ngân hàng <span class="badge">Khai Phá Dữ Liệu</span>
+    <small>Phân tích hành vi chi tiêu từ sao kê ngân hàng (Bank Statements)</small>
+  </h1>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <div class="ctl">
+      <label>min support</label>
+      <input id="minSup" type="number" step="0.005" min="0.002" max="0.1" value="0.01" style="width:110px">
+    </div>
+    <div class="ctl">
+      <label>alpha (tần suất / giá trị) = <span class="val" id="alphaVal">0.50</span></label>
+      <input id="alpha" type="range" min="0" max="1" step="0.05" value="0.5" style="width:160px">
+    </div>
+    <div class="ctl">
+      <label>số khách = <span class="val" id="custVal">3000</span></label>
+      <input id="maxCust" type="range" min="500" max="20000" step="500" value="3000" style="width:200px">
+    </div>
+    <div class="ctl">
+      <label>item</label>
+      <select id="itemCol">
+        <option value="category">Category</option>
+      </select>
+    </div>
+    <button id="run">Chạy thuật toán</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="meta" class="meta"></div>
+  <div id="output"></div>
+
+  <div id="chartBox" style="display:none" class="card">
+    <h2 style="margin-top:0">So sánh hiệu năng (Recall@K)</h2>
+    <canvas id="recallChart" height="100"></canvas>
+  </div>
+
+  <div id="cloBox">
+    <h2>Các nội dung mở rộng</h2>
+    <div class="controls">
+      <button id="btnQuality" style="background:#556fb5;color:white">Phân tích dữ liệu & Làm sạch</button>
+      <button id="btnApriori" style="background:#556fb5;color:white">Luật kết hợp Apriori</button>
+      <button id="btnClassify" style="background:#556fb5;color:white">Phân lớp Decision Tree/NB/KNN</button>
+      <button id="btnReg" style="background:#556fb5;color:white">Hồi quy dự báo chi tiêu</button>
+    </div>
+    <div id="cloStatus"></div>
+    <div id="cloOut"></div>
+  </div>
+
+  <div id="predictBox" style="display:none">
+    <h2>Dự đoán giỏ hàng tiếp theo — Tra cứu theo mã thẻ</h2>
+    <div class="controls">
+      <div class="ctl">
+        <label>Mã thẻ thành viên</label>
+        <select id="custCard" style="width:180px"></select>
+      </div>
+      <div class="ctl">
+        <label>K = <span class="val" id="kVal">5</span></label>
+        <input id="topK" type="range" min="1" max="10" step="1" value="5" style="width:140px">
+      </div>
+      <button id="predict">Dự đoán</button>
+    </div>
+    <div id="predStatus"></div>
+    <div id="predOut"></div>
+  </div>
+</div>
+
+<script>
+const METRIC_LABEL = { recall:"Recall", precision:"Precision", f1:"F1",
+  phr:"PHR", map:"MAP", mrr:"MRR", ndcg:"NDCG",
+  value_recall:"Value-Recall", value_precision:"Value-Prec" };
+
+const $ = id => document.getElementById(id);
+$("alpha").oninput = e => $("alphaVal").textContent = (+e.target.value).toFixed(2);
+$("maxCust").oninput = e => $("custVal").textContent = e.target.value;
+
+$("run").onclick = async () => {
+  const btn = $("run");
+  btn.disabled = true;
+  $("status").innerHTML = '<span class="spin"></span> Đang chạy WCM-SPADE... (lần đầu có thể vài chục giây)';
+  $("output").innerHTML = "";
+  $("meta").innerHTML = "";
+  try {
+    const res = await fetch("/bank/run", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        min_sup:+$("minSup").value, alpha:+$("alpha").value,
+        max_customers:+$("maxCust").value, item_col:$("itemCol").value })
+    });
+    const data = await res.json();
+    if (data.error || data.detail) { throw new Error(data.error || data.detail); }
+    render(data);
+    $("status").innerHTML = "";
+  } catch (e) {
+    $("status").innerHTML = '<span class="err">Lỗi: ' + e.message + '</span>';
+  } finally { btn.disabled = false; }
+};
+
+function render(d) {
+  const m = d.meta, sp = m.spade || {};
+  $("meta").innerHTML =
+    `Khách đánh giá: <b>${m.nEval.toLocaleString()}</b> · Item: <b>${m.nItems.toLocaleString()}</b> ` +
+    `· load: <b>${m.loadSec}s</b> · WCM-SPADE: patterns=<b>${sp.nPatterns}</b>, ` +
+    `MeanW=<b>${sp.meanW}</b>, effMinSup=<b>${sp.effectiveMinSup}</b>` +
+    ` · thời gian chạy: <b>${d.timings["WCM-SPADE"]}s</b>`;
+
+
+  let html = "<h2>Kết quả WCM-SPADE (next-basket, holdout basket cuối)</h2>";
+  html += "<div class='card'><table><tr><th>K</th>" +
+          d.metrics.map(mt => `<th>${METRIC_LABEL[mt]}</th>`).join("") + "</tr>";
+  for (const k of d.params.ks) {
+    const row = d.results["WCM-SPADE"][k];
+    html += `<tr><td>@${k}</td>` +
+      d.metrics.map(mt => `<td>${row[mt].toFixed(4)}</td>`).join("") + "</tr>";
+  }
+  html += "</table></div>";
+  $("output").innerHTML = html;
+
+  renderChart(d);
+
+  loadDemoCards();
+  $("predictBox").style.display = "block";
+  $("predOut").innerHTML = "";
+  $("predStatus").innerHTML = "";
+}
+
+$("topK").oninput = e => $("kVal").textContent = e.target.value;
+
+
+let _cardsLoaded = false;
+async function loadDemoCards() {
+  if (_cardsLoaded) return;
+  try {
+    const r = await fetch("/bank/demo-customers");
+    const d = await r.json();
+    const sel = $("custCard");
+    sel.innerHTML = (d.customerIds || [])
+      .map(id => `<option value="${id}">Thẻ ${id}</option>`).join("");
+    _cardsLoaded = true;
+  } catch (e) { /* để trống nếu lỗi */ }
+}
+
+$("predict").onclick = async () => {
+  const cid = $("custCard").value;
+  if (!cid) return;
+  const btn = $("predict"); btn.disabled = true;
+  $("predStatus").innerHTML = '<span class="spin"></span> Đang dự đoán...';
+  $("predOut").innerHTML = "";
+  try {
+    const res = await fetch("/bank/predict", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ customer_id:cid, top_k:+$("topK").value })
+    });
+    const data = await res.json();
+    if (data.error || data.detail) throw new Error(data.error || data.detail);
+    renderPrediction(data);
+    $("predStatus").innerHTML = "";
+  } catch (e) {
+    $("predStatus").innerHTML = '<span class="err">Lỗi: ' + e.message + '</span>';
+  } finally { btn.disabled = false; }
+};
+
+let LABELS = {};
+function nameOf(code) { return (LABELS[code] && LABELS[code].name) || code; }
+function titleOf(code) {
+  const l = LABELS[code]; if (!l) return code;
+  const bits = ["mã " + code];
+  if (l.price != null) bits.push("giá ~" + l.price.toLocaleString("vi-VN") + "đ");
+  if (l.count != null) bits.push(l.count + " lượt mua");
+  return bits.join(" · ");
+}
+function nameList(codes) { return codes.map(c => nameOf(c)).join(", "); }
+
+function chips(items) {
+  return items.map(it => {
+    const o = (typeof it === "object");
+    const code = o ? it.item : it;
+    const hit = o ? it.hit : false;
+    const st = hit ? "background:rgba(52,227,176,.22);color:#34e3b0;border-color:#34e3b0"
+                   : "background:var(--bg);color:var(--gray);border-color:var(--line)";
+    return `<span title="${titleOf(code)}" style="display:inline-block;border:1px solid;border-radius:7px;padding:2px 9px;margin:3px;font-size:12px;cursor:help;${st}">${nameOf(code)}${hit?" ✓":""}</span>`;
+  }).join("");
+}
+
+function renderPrediction(p) {
+  LABELS = p.labels || {};
+  const truthSet = new Set(p.truth);
+  let h = `<div class="card">`;
+  h += `<div class="meta">Thẻ thành viên <b>${p.customerId ?? ("#"+p.customerIdx)}</b> · lịch sử <b>${p.history.length}</b> basket · `
+     + `luật WCM-SPADE khớp: <b>${p.nMatched}</b> · <i>tên là alias demo, di chuột xem mã + giá quy đổi VND</i></div>`;
+  h += `<div style="margin:6px 0 14px"><b style="color:var(--gray)">Basket thật cuối cùng (để đối chiếu):</b> ${chips(p.truth)}</div>`;
+  h += `<div style="margin:6px 0 14px"><b style="color:var(--mint)">WCM-SPADE dự đoán Top-${p.topK}</b> (✓ = trúng):<br>`
+     + chips(p.predictions["WCM-SPADE"]) + `</div>`;
+
+  if (p.matchedPatterns.length) {
+    h += `<h2 style="font-size:14px">Luật tuần tự đã kích hoạt (top ${p.matchedPatterns.length} theo WSUP)</h2>`;
+    h += `<table><tr><th>Tiền đề (LastAnte)</th><th></th><th>Hệ quả</th><th>WSUP</th></tr>`;
+    for (const m of p.matchedPatterns) {
+      const cHit = m.consequent.some(c => truthSet.has(c));
+      h += `<tr><td style="text-align:left" title="${m.ante.join(', ')}">{${nameList(m.ante)}}</td><td>→</td>`
+         + `<td style="text-align:left;${cHit?'color:#34e3b0;font-weight:700':''}" title="${m.consequent.join(', ')}">{${nameList(m.consequent)}}${cHit?' ✓':''}</td>`
+         + `<td>${m.wsup}</td></tr>`;
+    }
+    h += `</table>`;
+  }
+  h += `</div>`;
+  $("predOut").innerHTML = h;
+}
+
+let _chart = null;
+function renderChart(d) {
+  $("chartBox").style.display = "block";
+  const ctx = $("recallChart").getContext("2d");
+  if (_chart) _chart.destroy();
+
+  const ks = d.params.ks;
+  const algos = Object.keys(d.results);
+  const colors = ["#34e3b0", "#ffc24b", "#ff7b7b", "#556fb5", "#8ea2c4"];
+  
+  const datasets = algos.map((algo, i) => ({
+    label: algo,
+    data: ks.map(k => d.results[algo][k].recall),
+    borderColor: colors[i % colors.length],
+    backgroundColor: colors[i % colors.length] + "22",
+    tension: 0.3,
+    borderWidth: 3
+  }));
+
+  _chart = new Chart(ctx, {
+    type: "line",
+    data: { labels: ks.map(k => "@" + k), datasets },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: "#1F1B24" } },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: { ticks: { color: "#1F1B24" }, grid: { color: "#E7E7EC" } },
+        y: { ticks: { color: "#1F1B24" }, grid: { color: "#E7E7EC" } }
+      }
+    }
+  });
+}
+
+// --- CURRICULUM ALIGNMENT LOGIC ---
+const cloFetch = async (url, btnId) => {
+  const btn = $(btnId); btn.disabled = true;
+  $("cloStatus").innerHTML = '<span class="spin"></span> Đang tính toán...';
+  $("cloOut").innerHTML = "";
+  try {
+    const res = await fetch(url.replace("/tafeng/", "/bank/"), {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ max_customers:+$("maxCust").value, item_col:$("itemCol").value })
+    });
+    const d = await res.json();
+    if (d.error || d.detail) throw new Error(d.error || d.detail);
+    $("cloStatus").innerHTML = "";
+    return d;
+  } catch (e) {
+    $("cloStatus").innerHTML = '<span class="err">Lỗi: ' + e.message + '</span>';
+  } finally { btn.disabled = false; }
+};
+
+$("btnQuality").onclick = async () => {
+  const d = await cloFetch("/tafeng/quality", "btnQuality");
+  if (!d) return;
+  const r = d.rows, c = d.customers;
+  $("cloOut").innerHTML = `<div class="card">
+    <b>Chương 1: Tiền xử lý dữ liệu (Làm sạch & EDA)</b>
+    <ul style="font-size:13px;color:var(--gray)">
+      <li>Tổng dòng đọc: <b>${r.totalRead.toLocaleString()}</b></li>
+      <li>Loại bỏ (ID thiếu/Ngày sai/Giá≤0): <b>${(r.totalRead-r.kept).toLocaleString()}</b> dòng</li>
+      <li>Dòng giữ lại: <b>${r.kept.toLocaleString()}</b> (${r.keptPct}%)</li>
+      <li>Khách hàng: <b>${c.nCustomers.toLocaleString()}</b> (trong đó ${c.ge2Pct}% có ≥2 basket)</li>
+      <li>Giá item: từ <b>${d.items.priceMin}</b> tới <b>${d.items.priceMax}</b> VND</li>
+    </ul>
+  </div>`;
+};
+
+$("btnApriori").onclick = async () => {
+  const d = await cloFetch("/bank/apriori", "btnApriori");
+  if (!d) return;
+
+  const rules = d.rules || [];
+  const avgConf = rules.length ? rules.reduce((s, r) => s + r.confidence, 0) / rules.length : 0;
+  const avgLift = rules.length ? rules.reduce((s, r) => s + r.lift, 0) / rules.length : 1;
+  const baselineAcc = 5.0; // Giả định random guess 5%
+  const aprioriAcc = (avgConf * 100).toFixed(1);
+  const baselineGrowth = 1.0;
+  const aprioriGrowth = avgLift.toFixed(2);
+
+  let h = `<div class="card">
+             <b>Chương 2: Khai thác luật kết hợp (Apriori)</b><br>
+             <p style="font-size:13px;color:var(--gray);margin-top:4px;">
+               So sánh hiệu quả dự kiến: Không áp dụng thuật toán (Baseline) vs Áp dụng Apriori.
+             </p>
+             <div style="display:flex; flex-wrap:wrap; gap:24px; margin-bottom: 24px;">
+               <div style="flex:1; min-width:300px; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--bg);">
+                 <canvas id="aprioriChart" height="200"></canvas>
+               </div>
+               <div style="flex:1; min-width:300px; overflow-x:auto;">
+                 <table style="margin-top:0;">
+                   <tr><th>Antecedents (Tiền đề)</th><th>Consequents (Hệ quả)</th><th>Sup</th><th>Conf</th><th>Lift</th></tr>`;
+  
+  rules.forEach(r => {
+    h += `<tr><td>{${r.ante.join(',')}}</td><td>{${r.cons.join(',')}}</td><td>${r.support}</td><td>${r.confidence}</td><td>${r.lift}</td></tr>`;
+  });
+
+  h += `         </table>
+                 <small style="color:var(--gray); display:block; margin-top:8px;">Tính toán trên ${d.n_transactions.toLocaleString()} giỏ hàng.</small>
+               </div>
+             </div>
+           </div>`;
+  
+  $("cloOut").innerHTML = h;
+
+  new Chart(document.getElementById("aprioriChart").getContext("2d"), {
+    type: 'bar',
+    data: {
+      labels: ['Khả năng mua thêm (%)', 'Hệ số tăng trưởng (Lift)'],
+      datasets: [
+        {
+          label: 'Trước (Baseline)',
+          data: [baselineAcc, baselineGrowth],
+          backgroundColor: '#9A9AA0'
+        },
+        {
+          label: 'Sau (Có Apriori)',
+          data: [aprioriAcc, aprioriGrowth],
+          backgroundColor: '#FFC24B'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: "#1F1B24" } }
+      },
+      scales: {
+        x: { ticks: { color: "#1F1B24" }, grid: { display: false } },
+        y: { ticks: { color: "#1F1B24" }, grid: { color: "#E7E7EC" }, beginAtZero: true }
+      }
+    }
+  });
+};
+
+$("btnClassify").onclick = async () => {
+  const d = await cloFetch("/tafeng/classify", "btnClassify");
+  if (!d) return;
+  let h = `<div class="card"><b>Chương 3: Phân lớp dữ liệu (Chi tiêu Cao/Thấp)</b><br><br>`;
+  h += `<table><tr><th>Mô hình</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1-Score</th></tr>`;
+  for (const [name, m] of Object.entries(d.models)) {
+    h += `<tr><td>${name}</td><td>${m.accuracy}</td><td>${m.precision}</td><td>${m.recall}</td><td>${m.f1}</td></tr>`;
+  }
+  h += `</table><small style="color:var(--gray)">Phân loại top 33% chi tiêu dựa trên R-F-M + quy mô giỏ. N=${d.nSamples}.</small></div>`;
+  $("cloOut").innerHTML = h;
+};
+
+$("btnReg").onclick = async () => {
+  const d = await cloFetch("/tafeng/regression", "btnReg");
+  if (!d) return;
+  $("cloOut").innerHTML = `<div class="card">
+    <b>Chương 5: Phân tích hồi quy (Dự báo chi tiêu tháng tới)</b>
+    <ul style="font-size:13px;color:var(--gray)">
+      <li>Mô hình: <b>Linear Regression</b> (scikit-learn)</li>
+      <li>Dữ liệu: <b>${d.n_train}</b> mẫu train, <b>${d.n_test}</b> mẫu test</li>
+      <li>Mean Absolute Error: <b>${d.mae.toLocaleString()}</b> VND</li>
+      <li>R-squared Score: <b>${d.r2}</b></li>
+      <li>Hệ số (Tháng 11, 12, 01): <b>[${d.coef.map(c=>c.toFixed(3)).join(', ')}]</b></li>
+      <li>Hệ số chặn: <b>${d.intercept.toFixed(2)}</b></li>
+    </ul>
+    <small style="color:var(--gray)">Dự báo dựa trên tổng chi tiêu 3 tháng trước đó.</small>
+  </div>`;
+};
+</script>
+</body>
+</html>

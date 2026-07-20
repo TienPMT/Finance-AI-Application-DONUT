@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="WCM-SPADE phân tích giỏ hàng Ta-Feng — khai phá mẫu tuần tự có trọng số">
+  <title>WCM-SPADE · Ta-Feng</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+
+  :root {
+    --primary: #4A2545;
+    --primary-dark: #2E1729;
+    --primary-light: #EFE9EE;
+    --gradient-start: #5C2E54;
+    --gradient-end: #2E1729;
+    --bg: #F4F4F6;
+    --surface: #FFFFFF;
+    --line: #E7E7EC;
+    --text: #1F1B24;
+    --text-secondary: #9A9AA0;
+    --positive: #3DBE8B;
+    --negative: #E0457B;
+    --shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    --radius-card: 20px;
+    --radius-btn: 14px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--text); background: var(--bg); font-family: Poppins, system-ui, sans-serif; line-height: 1.5; }
+  a { color: inherit; text-decoration: none; }
+  button, input, select { font: inherit; }
+  :focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+  .container { width: min(100% - 32px, 1100px); margin-inline: auto; }
+
+  /* header */
+  .site-header { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: var(--surface); backdrop-filter: blur(6px); }
+  .header-inner { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--primary); }
+  .brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 7px; color: white; background: var(--primary); font-size: 14px; }
+  nav { display: flex; align-items: center; gap: 18px; }
+  nav a { color: var(--text-secondary); font-size: 14px; font-weight: 600; padding: 6px 0; border-bottom: 2px solid transparent; cursor: pointer; transition: color .2s; }
+  nav a:hover, nav a.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  /* page */
+  .page-shell { padding-block: 40px 80px; }
+  h1, h2, h3, p { margin-top: 0; }
+  h1 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 12px; font-weight: 800; }
+  h2 { margin-bottom: 8px; font-weight: 700; }
+  .eyebrow { margin-bottom: 8px; color: var(--primary); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+
+  /* hero — purple gradient card */
+  .hero { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 40px; padding: 36px; border-radius: var(--radius-card); background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; box-shadow: var(--shadow); }
+  .hero h1 { color: white; }
+  .hero p { margin-bottom: 0; }
+  .hero .eyebrow { color: rgba(255,255,255,.7); }
+  .hero-copy { max-width: 600px; color: rgba(255,255,255,.8); font-size: 16px; margin-top: 8px; }
+
+  /* section heading */
+  .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 40px 0 16px; }
+  .section-heading:first-of-type { margin-top: 0; }
+  .muted { color: var(--text-secondary); font-size: 14px; }
+
+  /* metrics */
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .metric { padding: 22px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow); }
+  .metric span { display: block; color: var(--text-secondary); font-size: 13px; }
+  .metric strong { display: block; margin-top: 8px; font-size: 28px; font-variant-numeric: tabular-nums; color: var(--primary); }
+
+  /* buttons */
+  .button { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 12px 24px; border: none; border-radius: var(--radius-btn); font-weight: 700; font-size: 16px; cursor: pointer; transition: filter .2s; }
+  .button.primary { color: white; background: var(--primary); }
+  .button.primary:hover { filter: brightness(1.2); }
+  .button.secondary { color: var(--primary); border: 1px solid var(--primary); background: transparent; }
+  .button:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* controls bar */
+  .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); margin-bottom: 20px; box-shadow: var(--shadow); }
+  .ctl { display: flex; flex-direction: column; gap: 5px; }
+  .ctl label { font-size: 12px; color: var(--text-secondary); font-weight: 700; }
+  .ctl input, .ctl select { min-height: 40px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 14px; color: var(--text); background: var(--surface); font-size: 14px; }
+  .ctl .val { color: var(--primary); font-weight: 700; }
+
+  /* cards & tables */
+  .card { border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  .table-shell { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); margin-bottom: 20px; box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 12px 14px; text-align: center; border-bottom: 1px solid var(--line); font-size: 14px; }
+  th { color: var(--text-secondary); background: var(--bg); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+  td:first-child, th:first-child { text-align: left; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  .meta-line { color: var(--text-secondary); font-size: 13px; margin: 4px 0 18px; line-height: 1.6; }
+  .meta-line b { color: var(--text); }
+
+  /* chips */
+  .chips-row { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 14px; }
+  .chip { display: inline-flex; align-items: center; padding: 4px 9px; border: 1px solid; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .chip.hit { color: var(--positive); background: rgba(61,190,139,.12); border-color: var(--positive); }
+  .chip.miss { color: var(--text-secondary); background: var(--bg); border-color: var(--line); }
+
+  /* pattern card */
+  .pattern-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+  .pattern-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); box-shadow: var(--shadow); }
+  .pattern-flow { display: flex; align-items: center; gap: 8px; }
+  .arrow { color: var(--text-secondary); }
+  .inline-stats { display: flex; gap: 14px; margin: 0; }
+  .inline-stats dt { color: var(--text-secondary); font-size: 11px; }
+  .inline-stats dd { margin: 0; font-weight: 700; }
+
+  /* ==== cart layout ==== */
+  .cart-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+  .cart-panel { border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); padding: 20px; box-shadow: var(--shadow); }
+  .cart-panel .section-heading { margin: 0 0 14px; }
+  .cart-items { display: flex; flex-direction: column; gap: 8px; }
+  .cart-item { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); transition: transform .15s, box-shadow .15s; }
+  .cart-item:hover { transform: translateX(2px); box-shadow: 0 4px 12px rgba(0,0,0,.04); }
+  .seq-badge { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: white; font-weight: 800; font-size: 13px; }
+  .cart-item-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .cart-item-body strong { font-size: 14px; }
+  .cart-item-body small { color: var(--text-secondary); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .cart-item-price { color: var(--primary); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .cart-remove { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--negative); font-size: 16px; font-weight: 700; cursor: pointer; padding: 0; }
+  .cart-remove:hover { background: var(--negative); color: white; border-color: var(--negative); }
+
+  /* product picker */
+  .picker-list { max-height: 360px; overflow-y: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); padding: 4px; }
+  .picker-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; transition: background .15s; }
+  .picker-row:hover { background: rgba(74,37,69,.06); }
+  .picker-row .pname { font-size: 13px; font-weight: 600; }
+  .picker-row .pmeta { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .picker-row .pprice { font-size: 12px; color: var(--positive); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 70px; text-align: right; }
+  .picker-add { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--primary); border-radius: 50%; background: var(--surface); color: var(--primary); font-size: 18px; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; }
+  .picker-add:hover { background: var(--primary); color: white; }
+  .picker-add:disabled { opacity: .35; cursor: not-allowed; }
+  .cart-summary { display: flex; justify-content: space-between; padding: 14px 4px 0; border-top: 1px dashed var(--line); margin-top: 14px; font-size: 14px; color: var(--text-secondary); }
+  .cart-summary b { color: var(--text); }
+
+  /* sequential palette (4 màu, cùng tông primary → positive) */
+  .seq-1 { background: #5C2E54; }   /* tím đậm */
+  .seq-2 { background: #7A4870; }   /* tím hồng */
+  .seq-3 { background: #B86E91; }   /* hồng */
+  .seq-4 { background: #3DBE8B; }   /* xanh lá */
+  .seq-5 { background: #E0457B; }   /* hồng đậm */
+  .seq-border-1 { border-left: 4px solid #5C2E54; }
+  .seq-border-2 { border-left: 4px solid #7A4870; }
+  .seq-border-3 { border-left: 4px solid #B86E91; }
+  .seq-border-4 { border-left: 4px solid #3DBE8B; }
+  .seq-border-5 { border-left: 4px solid #E0457B; }
+
+  /* recommend cards */
+  .reco-list { display: flex; flex-direction: column; gap: 10px; }
+  .reco-card { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  .reco-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 8px; }
+  .reco-head strong { color: var(--primary); font-size: 14px; }
+  .reco-head .price { color: var(--positive); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .reco-head small { display: block; color: var(--text-secondary); font-size: 12px; margin-top: 2px; }
+  .reco-score { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+  .reco-score b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .reco-score .tag { padding: 2px 7px; border-radius: 6px; font-weight: 700; font-size: 11px; }
+  .reco-score .tag.match { background: rgba(61,190,139,.12); color: var(--positive); }
+  .reco-score .tag.fallback { background: rgba(154,154,160,.15); color: var(--text-secondary); }
+  .reco-evidence { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0 8px; }
+  .reco-evidence .chip { font-size: 11px; }
+  .reco-flow { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+  .reco-flow b { color: var(--text); }
+  .reco-empty { padding: 24px; border: 1px dashed var(--line); border-radius: 14px; text-align: center; color: var(--text-secondary); font-size: 13px; }
+
+  /* utils */
+  .err { color: var(--negative); }
+  .spin { display: inline-block; width: 16px; height: 16px; border: 3px solid var(--line); border-top-color: var(--primary); border-radius: 50%; animation: s 1s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes s { to { transform: rotate(360deg); } }
+  .empty-state { padding: 32px; border: 1px dashed var(--line); border-radius: var(--radius-card); text-align: center; color: var(--text-secondary); }
+  canvas { max-height: 300px; }
+  summary { color: var(--primary); font-weight: 700; cursor: pointer; margin-top: 8px; }
+
+  @media (max-width: 720px) {
+    .metric-grid, .pattern-list { grid-template-columns: 1fr; }
+    .hero { flex-direction: column; align-items: start; padding: 24px; }
+    .header-inner { flex-direction: column; align-items: start; padding-block: 10px; }
+    nav { width: 100%; overflow-x: auto; gap: 12px; }
+    .pattern-card { flex-direction: column; align-items: start; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    thead { display: none; }
+    tr { padding: 10px; border-bottom: 1px solid var(--line); }
+    td { display: flex; justify-content: space-between; padding: 6px; border: 0; }
+    td::before { content: attr(data-label); color: var(--text-secondary); font-weight: 700; }
+    .cart-layout { grid-template-columns: 1fr; }
+    .cart-item { grid-template-columns: 32px 1fr auto; }
+    .reco-head { flex-direction: column; align-items: start; }
+  }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand">
+      <span class="brand-mark">W</span>
+      <span>WCM-SPADE · Ta-Feng</span>
+    </div>
+    <nav aria-label="Điều hướng chính">
+      <a class="active" onclick="showSection('overview',this)">Tổng quan</a>
+      <a onclick="showSection('products',this)">Làm sạch dữ liệu</a>
+      <a onclick="showSection('baskets',this)">Dự đoán</a>
+      <a onclick="showSection('cartlive',this)">Giỏ hàng</a>
+      <a onclick="showSection('sequences',this)">Mẫu tuần tự</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="container page-shell">
+
+  <!-- ====== HERO ====== -->
+  <section class="hero">
+    <div>
+      <p class="eyebrow">WCM-SPADE + chấm điểm theo giá trị</p>
+      <h1>Khai phá mẫu tuần tự có trọng số trên dữ liệu Ta-Feng</h1>
+      <p class="hero-copy">Phân tích giỏ hàng, phát hiện quy luật mua sắm theo thời gian và dự đoán sản phẩm tiếp theo cho từng khách hàng.</p>
+    </div>
+  </section>
+
+  <!-- ====== SECTION: TỔNG QUAN ====== -->
+  <section id="sec-overview">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">WCM-SPADE</p>
+        <h2>Tham số và điều khiển</h2>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label>Min Support</label>
+        <input id="minSup" type="number" step="0.005" min="0.002" max="0.1" value="0.01" style="width:110px">
+      </div>
+      <div class="ctl">
+        <label>α (tần suất / giá trị) = <span class="val" id="alphaVal">0.50</span></label>
+        <input id="alpha" type="range" min="0" max="1" step="0.05" value="0.5" style="width:150px">
+      </div>
+      <div class="ctl">
+        <label>Số khách = <span class="val" id="custVal">3000</span></label>
+        <input id="maxCust" type="range" min="500" max="20000" step="500" value="3000" style="width:180px">
+      </div>
+      <div class="ctl">
+        <label>Mức item</label>
+        <select id="itemCol">
+          <option value="PRODUCT_SUBCLASS">PRODUCT_SUBCLASS</option>
+          <option value="PRODUCT_ID">PRODUCT_ID</option>
+        </select>
+      </div>
+      <button class="button primary" id="run">Chạy thuật toán</button>
+    </div>
+
+    <div id="status"></div>
+
+    <!-- metric grid - hiện sau khi chạy -->
+    <div id="overviewMetrics" style="display:none">
+      <div class="metric-grid">
+        <article class="metric"><span>Khách đánh giá</span><strong id="mEval">–</strong></article>
+        <article class="metric"><span>Mẫu khai phá</span><strong id="mPatterns">–</strong></article>
+        <article class="metric"><span>MeanW</span><strong id="mMeanW">–</strong></article>
+        <article class="metric"><span>Thời gian chạy</span><strong id="mTime">–</strong></article>
+      </div>
+      <div class="meta-line" id="meta"></div>
+    </div>
+
+    <!-- bảng metrics -->
+    <div id="output"></div>
+  </section>
+
+  <!-- ====== SECTION: SẢN PHẨM (Làm sạch DL) ====== -->
+  <section id="sec-products" style="display:none">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Tiền xử lý dữ liệu</p>
+        <h2>Làm sạch &amp; Phân tích dữ liệu</h2>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label>Số khách giới hạn</label>
+        <input id="qcCust" type="number" min="500" max="50000" step="500" value="20000" style="width:120px">
+      </div>
+      <div class="ctl">
+        <label>Mức item</label>
+        <select id="qcItem">
+          <option value="PRODUCT_SUBCLASS">PRODUCT_SUBCLASS</option>
+          <option value="PRODUCT_ID">PRODUCT_ID</option>
+        </select>
+      </div>
+      <button class="button primary" id="btnQuality">Làm sạch dữ liệu</button>
+    </div>
+    <div id="qcStatus"></div>
+    <div id="qcOut"></div>
+  </section>
+
+  <!-- ====== SECTION: GIỎ HÀNG (Dự đoán) ====== -->
+  <section id="sec-baskets" style="display:none">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Dự đoán</p>
+        <h2>Dự đoán giỏ hàng tiếp theo</h2>
+        <p>Tra cứu theo mã thẻ thành viên. Cần chạy thuật toán trước.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <label>Mã thẻ thành viên</label>
+        <select id="custCard" style="width:180px"></select>
+      </div>
+      <div class="ctl">
+        <label>K = <span class="val" id="kVal">5</span></label>
+        <input id="topK" type="range" min="1" max="10" step="1" value="5" style="width:140px">
+      </div>
+      <button class="button primary" id="predict">Dự đoán</button>
+    </div>
+    <div id="predStatus"></div>
+    <div id="predOut"></div>
+  </section>
+
+  <!-- ====== SECTION: GIỎ HÀNG TƯƠNG TÁC ====== -->
+  <section id="sec-cartlive" style="display:none">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Demo tương tác</p>
+        <h2>Giỏ hàng &amp; Gợi ý mua kèm theo WCM-SPADE</h2>
+        <p class="muted">Chọn sản phẩm Ta-Feng bên trái để bỏ vào giỏ — bảng bên phải tự động gợi ý mẫu tuần tự phù hợp (kèm giá VND, bằng chứng pattern).</p>
+      </div>
+    </div>
+
+    <div class="cart-layout">
+      <!-- CỘT TRÁI: PICKER + GIỎ -->
+      <section class="cart-panel" aria-labelledby="cart-live-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Chọn sản phẩm</p>
+            <h3 id="cart-live-title">Thêm vào giỏ</h3>
+          </div>
+          <button class="button secondary" type="button" id="btnClearCart" style="min-height:36px;padding:6px 14px;font-size:13px">Xóa giỏ</button>
+        </div>
+
+        <div class="ctl" style="margin-bottom:12px">
+          <input id="productSearch" type="search" placeholder="Tìm theo tên hoặc mã (vd: Sữa, 160114)..." style="width:100%;min-height:40px;padding:8px 12px;border:1px solid var(--line);border-radius:14px">
+        </div>
+
+        <div id="productPicker" class="picker-list" aria-label="Danh sách sản phẩm">
+          <div class="reco-empty">Đang tải danh sách sản phẩm từ Ta-Feng…</div>
+        </div>
+
+        <p class="eyebrow" style="margin:18px 0 8px">Giỏ hiện tại</p>
+        <div id="cartItems" class="cart-items">
+          <div class="reco-empty">Chưa có sản phẩm nào trong giỏ. Bấm "+" ở danh sách trên để thêm.</div>
+        </div>
+        <div id="cartSummary" class="cart-summary" style="display:none">
+          <span id="cartCount">0 sản phẩm</span>
+          <span>Tổng giá tham khảo <b id="cartTotal">0&nbsp;đ</b></span>
+        </div>
+      </section>
+
+      <!-- CỘT PHẢI: GỢI Ý -->
+      <aside class="cart-panel" aria-labelledby="reco-live-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Top 5 ứng viên</p>
+            <h3 id="reco-live-title">Gợi ý mua kèm</h3>
+          </div>
+          <span class="muted" id="recoStatus">—</span>
+        </div>
+        <div id="recoList" class="reco-list">
+          <div class="reco-empty">Thêm sản phẩm vào giỏ để hệ thống tìm mẫu tuần tự phù hợp.</div>
+        </div>
+        <details id="recoEvidenceBox" style="display:none;margin-top:14px">
+          <summary>Bằng chứng mẫu tuần tự (top <span id="recoEvidenceCount">0</span>)</summary>
+          <div id="recoEvidence" class="table-shell" style="margin-top:10px"></div>
+        </details>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ====== SECTION: MẪU TUẦN TỰ ====== -->
+  <section id="sec-sequences" style="display:none">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Đánh giá</p>
+        <h2>Mẫu tuần tự &amp; Hiệu năng</h2>
+      </div>
+    </div>
+    <div id="chartBox" style="display:none" class="card">
+      <h3 style="margin-top:0">So sánh Recall@K</h3>
+      <canvas id="recallChart" height="100"></canvas>
+    </div>
+  </section>
+
+</main>
+
+<script>
+const METRIC_LABEL = { recall:"Recall", precision:"Precision", f1:"F1",
+  phr:"PHR", map:"MAP", mrr:"MRR", ndcg:"NDCG",
+  value_recall:"Value-Recall", value_precision:"Value-Prec" };
+
+const $ = id => document.getElementById(id);
+
+// --- NAV ---
+function showSection(name, btn) {
+  ['overview','products','baskets','cartlive','sequences'].forEach(k => {
+    const el = $('sec-'+k); if (el) el.style.display = k===name ? '' : 'none';
+  });
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+// --- SLIDERS ---
+$("alpha").oninput = e => $("alphaVal").textContent = (+e.target.value).toFixed(2);
+$("maxCust").oninput = e => $("custVal").textContent = e.target.value;
+
+// --- RUN WCM-SPADE ---
+$("run").onclick = async () => {
+  const btn = $("run"); btn.disabled = true;
+  $("status").innerHTML = '<span class="spin"></span> Đang chạy WCM-SPADE... (lần đầu có thể vài chục giây)';
+  $("output").innerHTML = ""; $("meta").innerHTML = "";
+  try {
+    const res = await fetch("/tafeng/run", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        min_sup:+$("minSup").value, alpha:+$("alpha").value,
+        max_customers:+$("maxCust").value, item_col:$("itemCol").value })
+    });
+    const data = await res.json();
+    if (data.error || data.detail) { throw new Error(data.error || data.detail); }
+    renderRun(data);
+    $("status").innerHTML = "";
+  } catch (e) {
+    $("status").innerHTML = '<span class="err">Lỗi: ' + e.message + '</span>';
+  } finally { btn.disabled = false; }
+};
+
+function renderRun(d) {
+  const m = d.meta, sp = m.spade || {};
+  // metric grid
+  $("mEval").textContent = m.nEval.toLocaleString();
+  $("mPatterns").textContent = sp.nPatterns;
+  $("mMeanW").textContent = sp.meanW;
+  $("mTime").textContent = d.timings["WCM-SPADE"] + "s";
+  $("overviewMetrics").style.display = "";
+
+  $("meta").innerHTML =
+    `Item: <b>${m.nItems.toLocaleString()}</b> · load: <b>${m.loadSec}s</b> · `
+    + `effMinSup=<b>${sp.effectiveMinSup}</b>`;
+
+  // table
+  let html = '<div class="section-heading"><div><p class="eyebrow">Kết quả</p><h2>WCM-SPADE (next-basket, holdout basket cuối)</h2></div></div>';
+  html += '<div class="table-shell"><table><thead><tr><th>K</th>'
+    + d.metrics.map(mt => `<th>${METRIC_LABEL[mt]}</th>`).join("") + '</tr></thead><tbody>';
+  for (const k of d.params.ks) {
+    const row = d.results["WCM-SPADE"][k];
+    html += '<tr><td>@'+k+'</td>'
+      + d.metrics.map(mt => `<td>${row[mt].toFixed(4)}</td>`).join("") + '</tr>';
+  }
+  html += '</tbody></table></div>';
+  $("output").innerHTML = html;
+
+  // chart & prediction
+  renderChart(d);
+  loadDemoCards();
+}
+
+// --- QUALITY ---
+$("btnQuality").onclick = async () => {
+  const btn = $("btnQuality"); btn.disabled = true;
+  $("qcStatus").innerHTML = '<span class="spin"></span> Đang phân tích dữ liệu...';
+  $("qcOut").innerHTML = "";
+  try {
+    const res = await fetch("/tafeng/quality", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ max_customers:+($("qcCust").value||20000), item_col:$("qcItem").value })
+    });
+    const d = await res.json();
+    if (d.error || d.detail) throw new Error(d.error || d.detail);
+    const r = d.rows, c = d.customers, it = d.items, b = d.baskets;
+    const dropped = (r.dropMissingId||0) + (r.dropBadDate||0) + (r.dropBadPrice||0) + (r.dropBadAmount||0);
+    $("qcStatus").innerHTML = "";
+    $("qcOut").innerHTML = `<div class="card">
+      <h3 style="margin-top:0">Báo cáo tiền xử lý dữ liệu Ta-Feng</h3>
+      <div class="metric-grid" style="margin-bottom:18px">
+        <article class="metric"><span>Tổng dòng đọc</span><strong>${r.totalRead.toLocaleString()}</strong></article>
+        <article class="metric"><span>Dòng giữ lại</span><strong>${r.kept.toLocaleString()}</strong><small class="muted" style="display:block;margin-top:4px">${r.keptPct}%</small></article>
+        <article class="metric"><span>Khách hàng</span><strong>${c.nCustomers.toLocaleString()}</strong><small class="muted" style="display:block;margin-top:4px">${c.ge2Pct}% có ≥2 giỏ</small></article>
+        <article class="metric"><span>Mặt hàng</span><strong>${it.nItems.toLocaleString()}</strong></article>
+      </div>
+      <div style="margin-bottom:18px">
+        <h4 style="margin:0 0 8px">Các bước làm sạch</h4>
+        <table>
+          <thead><tr><th>Bước xử lý</th><th>Trước</th><th>Sau</th><th>Loại bỏ</th></tr></thead>
+          <tbody>
+            <tr><td>Dữ liệu gốc</td><td>${r.totalRead.toLocaleString()}</td><td>–</td><td>–</td></tr>
+            <tr><td>Loại thiếu CUSTOMER_ID / PRODUCT_ID</td><td>${r.totalRead.toLocaleString()}</td><td>${r.totalRead.toLocaleString()}</td><td>${(r.dropMissingId||0).toLocaleString()}</td></tr>
+            <tr><td>Loại SALES_PRICE ≤ 0 hoặc AMOUNT ≤ 0</td><td>${r.totalRead.toLocaleString()}</td><td>${r.totalRead.toLocaleString()}</td><td>${((r.dropBadPrice||0)+(r.dropBadAmount||0)).toLocaleString()}</td></tr>
+            <tr><td>Khử trùng lặp (KH + ngày + item)</td><td>${r.totalRead.toLocaleString()}</td><td>${(r.totalRead-(r.duplicateLines||0)).toLocaleString()}</td><td>${(r.duplicateLines||0).toLocaleString()} (${r.duplicatePct}%)</td></tr>
+            <tr><td>Gom nhóm tạo Sequence</td><td>–</td><td>${c.nCustomers.toLocaleString()} khách</td><td>–</td></tr>
+            <tr><td>Lọc khách ≥ 2 giỏ</td><td>${c.nCustomers.toLocaleString()}</td><td>${(c.nWithGe2Baskets||0).toLocaleString()} (${c.ge2Pct}%)</td><td>–</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="metric-grid" style="grid-template-columns:repeat(4,1fr)">
+        <article class="metric"><span>Giá item (min)</span><strong>${it.priceMin}</strong></article>
+        <article class="metric"><span>Giá item (max)</span><strong>${it.priceMax}</strong></article>
+        <article class="metric"><span>TB item/giỏ</span><strong>${b.avgItemsPerBasket}</strong></article>
+        <article class="metric"><span>TB giỏ/khách</span><strong>${b.avgBasketsPerCustomer}</strong></article>
+      </div>
+    </div>`;
+  } catch(e) {
+    $("qcStatus").innerHTML = '<span class="err">Lỗi: ' + e.message + '</span>';
+    if (e.message.includes("404") || e.message.includes("Not Found")) {
+      $("qcStatus").innerHTML += ' <small>(API /tafeng/quality chưa sẵn sàng)</small>';
+    }
+  } finally { btn.disabled = false; }
+};
+
+// --- PREDICTION ---
+$("topK").oninput = e => $("kVal").textContent = e.target.value;
+
+let _cardsLoaded = false;
+async function loadDemoCards() {
+  if (_cardsLoaded) return;
+  try {
+    const r = await fetch("/spade/demo-customers");
+    const d = await r.json();
+    const sel = $("custCard");
+    sel.innerHTML = (d.customerIds||[]).map(id => `<option value="${id}">Thẻ ${id}</option>`).join("");
+    _cardsLoaded = true;
+  } catch(e) {}
+}
+
+$("predict").onclick = async () => {
+  const cid = $("custCard").value;
+  if (!cid) return;
+  const btn = $("predict"); btn.disabled = true;
+  $("predStatus").innerHTML = '<span class="spin"></span> Đang dự đoán...';
+  $("predOut").innerHTML = "";
+  try {
+    const res = await fetch("/spade/predict", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ customer_id:cid, top_k:+$("topK").value })
+    });
+    const data = await res.json();
+    if (data.error || data.detail) throw new Error(data.error || data.detail);
+    renderPrediction(data);
+    $("predStatus").innerHTML = "";
+  } catch(e) {
+    $("predStatus").innerHTML = '<span class="err">Lỗi: ' + e.message + '</span>';
+  } finally { btn.disabled = false; }
+};
+
+let LABELS = {};
+function nameOf(code) { return (LABELS[code]&&LABELS[code].name)||code; }
+function titleOf(code) {
+  const l = LABELS[code]; if (!l) return code;
+  const bits = ["mã "+code];
+  if (l.price!=null) bits.push("giá ~"+l.price.toLocaleString("vi-VN")+"đ");
+  if (l.count!=null) bits.push(l.count+" lượt mua");
+  return bits.join(" · ");
+}
+function nameList(codes) { return codes.map(c=>nameOf(c)).join(", "); }
+function chips(items) {
+  return items.map(it=>{
+    const o = (typeof it==="object"), code = o?it.item:it, hit = o?it.hit:false;
+    const cls = hit ? "chip hit" : "chip miss";
+    return `<span title="${titleOf(code)}" class="${cls}">${nameOf(code)}${hit?" ✓":""}</span>`;
+  }).join("");
+}
+
+function renderPrediction(p) {
+  LABELS = p.labels||{};
+  const truthSet = new Set(p.truth);
+  let h = '<div class="card">';
+  h += '<div class="meta-line">Thẻ thành viên <b>'+(p.customerId||("#"+p.customerIdx))+'</b> · lịch sử <b>'+p.history.length+'</b> basket · luật khớp: <b>'+p.nMatched+'</b> · <i>di chuột xem mã + giá quy đổi VND</i></div>';
+  h += '<div style="margin:6px 0 14px"><b style="color:var(--text-secondary)">Basket thật cuối cùng (đối chiếu):</b><div class="chips-row">'+chips(p.truth)+'</div></div>';
+  h += '<div style="margin:6px 0 14px"><b style="color:var(--primary)">WCM-SPADE dự đoán Top-'+p.topK+'</b> (✓ = trúng):<div class="chips-row">'+chips(p.predictions["WCM-SPADE"])+'</div></div>';
+  if (p.matchedPatterns.length) {
+    h += '<details open><summary>Luật tuần tự đã kích hoạt (top '+p.matchedPatterns.length+' theo WSUP)</summary>';
+    h += '<div class="table-shell" style="margin-top:10px"><table><thead><tr><th>Tiền đề</th><th></th><th>Hệ quả</th><th>WSUP</th></tr></thead><tbody>';
+    for (const m of p.matchedPatterns) {
+      const cHit = m.consequent.some(c=>truthSet.has(c));
+      h += '<tr><td style="text-align:left" title="'+m.ante.join(', ')+'">{'+nameList(m.ante)+'}</td><td>→</td>'
+        + '<td style="text-align:left;'+(cHit?'color:var(--positive);font-weight:700':'')+'" title="'+m.consequent.join(', ')+'">{'+nameList(m.consequent)+'}'+(cHit?' ✓':'')+'</td>'
+        + '<td>'+m.wsup+'</td></tr>';
+    }
+    h += '</tbody></table></div></details>';
+  }
+  h += '</div>';
+  $("predOut").innerHTML = h;
+}
+
+// --- CART LIVE (chọn sản phẩm → gợi ý WCM-SPADE) ---
+const CART = { items: [], products: [], filter: "", labels: {} };
+let _recoAbort = null;
+
+const fmtVND = v => (v == null ? "—" : Number(v).toLocaleString("vi-VN") + " đ");
+const seqClass = i => ((i - 1) % 5) + 1;
+
+function renderPicker() {
+  const box = $("productPicker");
+  const q = CART.filter.trim().toLowerCase();
+  const rows = CART.products.filter(p => {
+    if (!q) return true;
+    return p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q);
+  });
+  if (!rows.length) {
+    box.innerHTML = '<div class="reco-empty">Không có sản phẩm khớp.</div>';
+    return;
+  }
+  box.innerHTML = rows.slice(0, 80).map(p => {
+    const inCart = CART.items.some(c => c.code === p.code);
+    return `<div class="picker-row">
+      <div>
+        <div class="pname">${escapeHtml(p.name)}</div>
+        <div class="pmeta">mã ${p.code} · ${p.count ?? 0} lượt mua</div>
+      </div>
+      <div class="pprice">${fmtVND(p.price)}</div>
+      <button class="picker-add" type="button" data-add="${p.code}" ${inCart ? "disabled" : ""}
+              title="${inCart ? "Đã có trong giỏ" : "Thêm vào giỏ"}" aria-label="Thêm ${escapeHtml(p.name)} vào giỏ">+</button>
+    </div>`;
+  }).join("");
+  box.querySelectorAll("[data-add]").forEach(b => {
+    b.onclick = () => addToCart(b.dataset.add);
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function addToCart(code) {
+  if (CART.items.some(c => c.code === code)) return;
+  const p = CART.products.find(x => x.code === code);
+  if (!p) return;
+  CART.items.push({ code: p.code, name: p.name, price: p.price, count: p.count });
+  renderPicker();
+  renderCart();
+  fetchRecommend();
+}
+
+function removeFromCart(code) {
+  CART.items = CART.items.filter(c => c.code !== code);
+  renderPicker();
+  renderCart();
+  fetchRecommend();
+}
+
+function renderCart() {
+  const box = $("cartItems");
+  const sum = $("cartSummary");
+  if (!CART.items.length) {
+    box.innerHTML = '<div class="reco-empty">Chưa có sản phẩm nào trong giỏ. Bấm "+" ở danh sách trên để thêm.</div>';
+    sum.style.display = "none";
+    return;
+  }
+  box.innerHTML = CART.items.map((it, i) => {
+    const s = seqClass(i + 1);
+    return `<article class="cart-item seq-border-${s}" title="Thêm thứ ${i+1}">
+      <div class="seq-badge seq-${s}">${i+1}</div>
+      <div class="cart-item-body">
+        <strong>${escapeHtml(it.name)}</strong>
+        <small>mã ${it.code} · ${it.count ?? 0} lượt mua</small>
+      </div>
+      <span class="cart-item-price">${fmtVND(it.price)}</span>
+      <button class="cart-remove" type="button" data-rm="${it.code}" aria-label="Xóa ${escapeHtml(it.name)}">×</button>
+    </article>`;
+  }).join("");
+  sum.style.display = "flex";
+  $("cartCount").textContent = `${CART.items.length} sản phẩm`;
+  const total = CART.items.reduce((a, b) => a + (b.price || 0), 0);
+  $("cartTotal").textContent = fmtVND(total);
+  box.querySelectorAll("[data-rm]").forEach(b => {
+    b.onclick = () => removeFromCart(b.dataset.rm);
+  });
+}
+
+async function fetchRecommend() {
+  const recoList = $("recoList");
+  const recoStatus = $("recoStatus");
+  const evBox = $("recoEvidenceBox");
+  if (!CART.items.length) {
+    recoList.innerHTML = '<div class="reco-empty">Thêm sản phẩm vào giỏ để hệ thống tìm mẫu tuần tự phù hợp.</div>';
+    recoStatus.textContent = "—";
+    evBox.style.display = "none";
+    return;
+  }
+  recoStatus.innerHTML = '<span class="spin"></span>';
+  if (_recoAbort) _recoAbort.abort();
+  _recoAbort = new AbortController();
+  try {
+    const res = await fetch("/tafeng/recommend", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: CART.items.map(c => c.code), top_k: 5 }),
+      signal: _recoAbort.signal
+    });
+    const d = await res.json();
+    if (d.error || d.detail) throw new Error(d.error || d.detail);
+    CART.labels = d.labels || {};
+    renderReco(d);
+    recoStatus.textContent = `${(d.recommendations || []).length} gợi ý`;
+  } catch (e) {
+    if (e.name === "AbortError") return;
+    recoList.innerHTML = '<div class="reco-empty err">Lỗi: ' + escapeHtml(e.message) + '</div>';
+    recoStatus.textContent = "lỗi";
+    evBox.style.display = "none";
+  }
+}
+
+function renderReco(d) {
+  const recoList = $("recoList");
+  const evBox = $("recoEvidenceBox");
+  const evBoxBody = $("recoEvidence");
+  const cartSet = new Set((d.cart || []).map(String));
+  const recs = d.recommendations || [];
+  const matched = d.matchedPatterns || [];
+
+  if (!recs.length) {
+    recoList.innerHTML = '<div class="reco-empty">Chưa tìm được mẫu phù hợp với giỏ hiện tại.</div>';
+  } else {
+    recoList.innerHTML = recs.map((r, idx) => {
+      const labOf = c => {
+        const L = CART.labels[c];
+        return L ? L.name : c;
+      };
+      // pattern khớp: antecedent có chứa cart
+      const hit = matched.find(m => m.consequent.includes(r.code));
+      const anteChips = hit
+        ? hit.ante.map(c => `<span class="chip ${cartSet.has(c) ? "hit" : "miss"}">${escapeHtml(labOf(c))}</span>`).join("")
+        : "";
+      const tag = hit ? '<span class="tag match">Khớp mẫu tuần tự</span>'
+                       : '<span class="tag fallback">Phổ biến</span>';
+      const flow = hit
+        ? `<div class="reco-flow"><b>Antecedent:</b> {${hit.ante.map(labOf).map(escapeHtml).join(", ")}} → <b>Consequent:</b> {${escapeHtml(r.name)}}</div>`
+        : '<div class="reco-flow">Không khớp mẫu tuần tự — xếp theo độ phổ biến × trọng số giá trị.</div>';
+      return `<article class="reco-card" data-reco-code="${r.code}">
+        <div class="reco-head">
+          <div>
+            <strong>#${idx+1} · ${escapeHtml(r.name)}</strong>
+            <small>mã ${r.code} · ${r.count ?? 0} lượt mua</small>
+          </div>
+          <span class="price">${fmtVND(r.price)}</span>
+        </div>
+        <div class="reco-score">
+          ${tag}
+          <span>Score <b>${r.score.toFixed(3)}</b></span>
+          ${hit ? `<span>WSUP <b>${hit.wsup.toFixed(3)}</b></span>` : ""}
+        </div>
+        ${anteChips ? `<div class="reco-evidence">${anteChips}</div>` : ""}
+        ${flow}
+        <button class="button secondary full-width" type="button" data-add="${r.code}" style="margin-top:10px">+ Thêm sản phẩm này</button>
+      </article>`;
+    }).join("");
+    recoList.querySelectorAll("[data-add]").forEach(b => {
+      b.onclick = () => addToCart(b.dataset.add);
+    });
+  }
+
+  if (matched.length) {
+    evBox.style.display = "";
+    $("recoEvidenceCount").textContent = matched.length;
+    evBoxBody.innerHTML = `<table><thead><tr><th>Antecedent</th><th></th><th>Consequent</th><th>WSUP</th></tr></thead><tbody>
+      ${matched.slice(0, 8).map(m => {
+        const labOf = c => { const L = CART.labels[c]; return L ? L.name : c; };
+        return `<tr>
+          <td style="text-align:left">{${m.ante.map(c => escapeHtml(labOf(c))).join(", ")}}</td>
+          <td>→</td>
+          <td style="text-align:left">{${m.consequent.map(c => escapeHtml(labOf(c))).join(", ")}}</td>
+          <td>${m.wsup.toFixed(3)}</td>
+        </tr>`;
+      }).join("")}
+    </tbody></table>`;
+  } else {
+    evBox.style.display = "none";
+  }
+}
+
+async function loadProducts() {
+  try {
+    const r = await fetch("/tafeng/products?limit=80");
+    const d = await r.json();
+    if (d.error || d.detail) throw new Error(d.error || d.detail);
+    CART.products = d.products || [];
+    renderPicker();
+  } catch (e) {
+    $("productPicker").innerHTML = '<div class="reco-empty err">Lỗi tải sản phẩm: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+$("productSearch").oninput = e => {
+  CART.filter = e.target.value;
+  renderPicker();
+};
+$("btnClearCart").onclick = () => {
+  CART.items = [];
+  renderPicker();
+  renderCart();
+  fetchRecommend();
+};
+
+// load khi mở tab lần đầu
+let _cartProductsLoaded = false;
+const _origShow = showSection;
+showSection = function(name, btn) {
+  _origShow(name, btn);
+  if (name === "cartlive" && !_cartProductsLoaded) {
+    _cartProductsLoaded = true;
+    loadProducts();
+  }
+};
+
+// --- CHART ---
+let _chart = null;
+function renderChart(d) {
+  const box = $("chartBox"); box.style.display = "block";
+  const ctx = $("recallChart").getContext("2d");
+  if (_chart) _chart.destroy();
+  const ks = d.params.ks, algos = Object.keys(d.results);
+  const colors = ["#4A2545","#3DBE8B","#E0457B","#9A9AA0","#5C2E54"];
+  const datasets = algos.map((algo,i)=>({
+    label:algo, data:ks.map(k=>d.results[algo][k].recall),
+    borderColor:colors[i%colors.length], backgroundColor:colors[i%colors.length]+"22",
+    tension:0.3, borderWidth:3
+  }));
+  _chart = new Chart(ctx, {
+    type:"line", data:{labels:ks.map(k=>"@"+k),datasets},
+    options:{responsive:true, plugins:{legend:{labels:{color:"#1F1B24"}}},
+      scales:{x:{ticks:{color:"#9A9AA0"},grid:{color:"#E7E7EC"}},
+              y:{ticks:{color:"#9A9AA0"},grid:{color:"#E7E7EC"}}}}
+  });
+}
+</script>
+</body>
+</html>

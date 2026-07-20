@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Demo phân tích bán lẻ và gợi ý mua kèm bằng CM-SPADE">
+  <title>{% block title %}KPDL Retail Analytics{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+  <script src="{{ url_for('static', path='/cart.js') }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark">K</span>
+        <span>KPDL Retail Analytics</span>
+      </a>
+      <nav aria-label="Điều hướng chính">
+        <a href="/">Tổng quan</a>
+        <a href="/products">Sản phẩm</a>
+        <a href="/cart" data-cart-link>Giỏ hàng <span class="cart-count" data-cart-count>0</span></a>
+        <a href="/patterns">Mẫu tuần tự</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main-content" class="container page-shell">
+    {% block content %}{% endblock %}
+  </main>
+  <div class="toast" data-cart-status aria-live="polite"></div>
+</body>
+</html>
