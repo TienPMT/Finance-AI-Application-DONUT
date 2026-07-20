@@ -30,6 +30,31 @@ serviceAccount*.json
 **/application*.properties
 !**/application*.properties.template
 
+# General credentials & tokens
+**/credentials*.json
+**/*credentials*.json
+**/client_secret*.json
+**/serviceAccountKey.json
+**/firebase-adminsdk*.json
+*.credentials
+.credentials/
+.gitcredentials
+credentials.json
+credentials.yml
+credentials.yaml
+secrets.yml
+secrets.yaml
+jwt_*.key
+jwt_*.pem
+jwt_*.pub
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.pub
+authorized_keys
+known_hosts
+
 # DB dumps / backups / personal data
 backups/
 **/backups/
@@ -50,11 +75,17 @@ backups/
 
 # ---------- Flutter / Dart ----------
 .dart_tool/
+**/.dart_tool/
 .flutter-plugins
+**/.flutter-plugins
 .flutter-plugins-dependencies
+**/.flutter-plugins-dependencies
 .packages
+**/.packages
 .pub-cache/
+**/.pub-cache/
 .pub/
+**/.pub/
 build/
 **/build/
 *.lock.bak
@@ -62,10 +93,18 @@ build/
 **/Flutter/ephemeral/
 **/Flutter/Generated.xcconfig
 **/Flutter/flutter_export_environment.sh
+**/Flutter/flutter_export_environment.plist
 **/ServiceDefinitions.json
 android/local.properties
 **/android/local.properties
 **/.gradle/
+
+# Flutter generated files
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+**/windows/flutter/generated_plugin_registrant.*
+**/linux/flutter/generated_plugin_registrant.*
+**/macos/Flutter/GeneratedPluginRegistrant.swift
 
 # ---------- Java / Spring (Maven) ----------
 target/
@@ -86,8 +125,22 @@ venv/
 env/
 *.egg-info/
 .pytest_cache/
+**/.pytest_cache/
 .mypy_cache/
+**/.mypy_cache/
 .ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Python testing / coverage
+.coverage
+**/.coverage
+htmlcov/
+**/htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+nosetests.xml
 
 # ---------- IDE / Editor ----------
 .idea/
@@ -102,6 +155,9 @@ env/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ---------- Temporary files / scripts ----------
+amp
 
 # ---------- ML weights (>100MB, GitHub rejects — share via Drive/HF) ----------
 *.safetensors
