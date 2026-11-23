@@ -1,23 +1,86 @@
 package vn.edu.huit.finance.core.Service;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.coyote.BadRequestException;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.edu.huit.finance.core.Dto.UserCreateDto;
 import vn.edu.huit.finance.core.Dto.UserUpdateDto;
+import vn.edu.huit.finance.core.Entity.AuditAction;
 import vn.edu.huit.finance.core.Entity.User;
+import vn.edu.huit.finance.core.Exception.AdminAccountProtectedException;
+import vn.edu.huit.finance.core.Exception.ProfileAccessDeniedException;
+import vn.edu.huit.finance.core.Exception.ProfileUpdateRefusedException;
+import vn.edu.huit.finance.core.Exception.UserNotFoundException;
 import vn.edu.huit.finance.core.Repository.UserRepository;
+import vn.edu.huit.finance.core.Security.Roles;
+import vn.edu.huit.finance.core.Security.UsernamePolicy;
+import vn.edu.huit.finance.core.Service.Audit.AuditActor;
+import vn.edu.huit.finance.core.Service.Audit.AuditEntry;
+import vn.edu.huit.finance.core.Service.Cache.StatisticsChange;
+import vn.edu.huit.finance.core.Service.Cache.StatisticsChangedEvent;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Accounts as administrators manage them, and the profile a user edits. Every change is recorded in action_logs inside
+ * its transaction: the actor is the caller of the request (the administrator, or the user editing their own profile),
+ * looked up in the SecurityContext, and the target is the account changed. Rows name the fields that changed, never
+ * their values, except the role and the active flag, which are what the change is about.
+ */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final String MSG_ROLE_CHANGE_FORBIDDEN = "Không được phép tự thay đổi vai trò";
+    private static final String MSG_EMAIL_CHANGE_FORBIDDEN = "Không thể tự đổi email. Liên hệ quản trị viên.";
+    private static final String AUDIT_CREATED = "Quản trị viên tạo tài khoản %s, vai trò %s";
+    private static final String AUDIT_UPDATED_BY_ADMIN = "Quản trị viên cập nhật tài khoản: %s";
+    private static final String AUDIT_UPDATED_BY_OWNER = "Người dùng tự cập nhật hồ sơ: %s";
+    private static final String AUDIT_FIELD_USERNAME = "tên đăng nhập";
+    private static final String AUDIT_FIELD_PHONE = "số điện thoại";
+    private static final String AUDIT_FIELD_EMAIL = "email";
+    private static final String AUDIT_NO_FIELD_CHANGED = "không có trường nào thay đổi";
+    private static final String AUDIT_ROLE_CHANGED = "Vai trò %s → %s";
+    private static final String AUDIT_DELETED = "Xóa vĩnh viễn tài khoản %s";
+    private static final String AUDIT_LOCKED = "Khóa tài khoản (active true → false)";
+    private static final String AUDIT_UNLOCKED = "Mở khóa tài khoản (active false → true)";
+    private static final String AUDIT_LOCKED_INSTEAD_OF_DELETED =
+            "Khóa tài khoản thay vì xóa vì đã có dữ liệu (active true → false)";
+    private static final String MSG_USER_NOT_FOUND = "Không tìm thấy người dùng với ID: %d";
+    private static final String MSG_ADMIN_PROTECTED = "Không được phép tác động hoặc thay đổi trạng thái của ADMIN hệ thống!";
+    private static final String MSG_NOT_OWN_PROFILE = "Bạn không có quyền chỉnh sửa tài khoản của người khác!";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
+    private final AuditLogService auditLogService;
+
+    /** For the admin pages: a page of the users, the newest (highest id) first. */
+    @Transactional(readOnly = true)
+    public Page<User> listNewestFirst(Pageable pageable) {
+        return userRepository.findAll(
+                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "id")));
+    }
+
+    /** For the admin dashboard: a page of the end users (administrators left out), the newest first. */
+    @Transactional(readOnly = true)
+    public Page<User> listEndUsersNewestFirst(Pageable pageable) {
+        return userRepository.findByRoleNot(Roles.ADMIN,
+                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "id")));
+    }
 
     @Transactional
     public User createUser(UserCreateDto dto) {
@@ -26,42 +89,127 @@ public class UserService {
         user.setEmail(dto.getEmail());
         user.setPhone(dto.getPhone());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setRole(normalizeRole(dto.getRole()));
+        user.setRole(Roles.normalize(dto.getRole()));
         user.setActive(true);
 
-        return userRepository.save(user);
+        User created = userRepository.save(user);
+        eventPublisher.publishEvent(StatisticsChangedEvent.of(StatisticsChange.ACCOUNT_CREATED));
+        record(AuditAction.USER_CREATED, created.getId(), String.format(AUDIT_CREATED, created.getEmail(), created.getRole()));
+        return created;
     }
 
+    /** For administrators: any field of any user, the role included. */
     @Transactional
     public User updateUser(Long id, UserUpdateDto dto) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-
-        if (dto.getUsername() != null && !dto.getUsername().isBlank()) user.setUsername(dto.getUsername());
-        if (dto.getPhone() != null && !dto.getPhone().isBlank()) user.setPhone(dto.getPhone());
-        if (dto.getEmail() != null && !dto.getEmail().isBlank()) user.setEmail(dto.getEmail());
-        if (dto.getRole() != null && !dto.getRole().isBlank()) user.setRole(normalizeRole(dto.getRole()));
-
-        return userRepository.save(user);
+        return update(id, dto, true);
     }
 
+    /**
+     * For a user editing their own profile: the same fields, but the role cannot change. Asking for a different role is
+     * refused (403) instead of being ignored, since it is an attempt to promote oneself.
+     */
     @Transactional
-    public void deleteUser(Long id) {
+    public User updateOwnProfile(Long id, UserUpdateDto dto) {
+        return update(id, dto, false);
+    }
+
+    /**
+     * PUT /api/users/{id} của chính người gọi: id trên đường dẫn phải là id của {@code caller}, nếu không thì từ chối
+     * (403) trước khi đọc tài khoản kia.
+     */
+    @Transactional
+    public User updateOwnProfile(User caller, Long id, UserUpdateDto dto) {
+        if (!Objects.equals(caller.getId(), id)) {
+            log.warn("Profile update of another account refused, callerId={}, targetId={}", caller.getId(), id);
+            throw new ProfileAccessDeniedException(MSG_NOT_OWN_PROFILE);
+        }
+        return update(id, dto, false);
+    }
+
+    private User update(Long id, UserUpdateDto dto, boolean mayChangeRole) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-        try {
-            userRepository.delete(user);
-            userRepository.flush();
-        } catch (Exception e) {
-            user.setActive(false);
-            userRepository.save(user);
-            throw new RuntimeException("Tài khoản đang có giao dịch. Hệ thống đã tự động vô hiệu hóa (Khóa) thay vì xóa vĩnh viễn để bảo toàn dữ liệu.");
+                .orElseThrow(() -> new UserNotFoundException(String.format(MSG_USER_NOT_FOUND, id)));
+
+        String roleBefore = user.getRole();
+        if (dto.getRole() != null && !dto.getRole().isBlank()) {
+            String requestedRole = Roles.normalize(dto.getRole());
+            if (mayChangeRole) {
+                user.setRole(requestedRole);
+            } else if (!requestedRole.equals(Roles.normalize(user.getRole()))) {
+                log.warn("Role change refused, userId={}, requestedRole={}", id, requestedRole);
+                throw new AccessDeniedException(MSG_ROLE_CHANGE_FORBIDDEN);
+            }
+        }
+        if (!mayChangeRole) {
+            refuseForbiddenOwnerChanges(id, user, dto);
+        }
+        List<String> changedFields = new ArrayList<>();
+        if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
+            addIfChanged(changedFields, AUDIT_FIELD_USERNAME, user.getUsername(), dto.getUsername());
+            user.setUsername(dto.getUsername());
+        }
+        if (dto.getPhone() != null && !dto.getPhone().isBlank()) {
+            addIfChanged(changedFields, AUDIT_FIELD_PHONE, user.getPhone(), dto.getPhone());
+            user.setPhone(dto.getPhone());
+        }
+        // Đường tự sửa hồ sơ: email không đổi theo định nghĩa (đã kiểm ở trên), không ghi lại để khỏi đổi kiểu chữ của subject JWT.
+        if (mayChangeRole && dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            addIfChanged(changedFields, AUDIT_FIELD_EMAIL, user.getEmail(), dto.getEmail());
+            user.setEmail(dto.getEmail());
+        }
+
+        User saved = userRepository.save(user);
+        eventPublisher.publishEvent(StatisticsChangedEvent.of(StatisticsChange.ACCOUNT_PROFILE, id));
+        String fields = changedFields.isEmpty() ? AUDIT_NO_FIELD_CHANGED : String.join(", ", changedFields);
+        record(AuditAction.USER_UPDATED, id, String.format(mayChangeRole ? AUDIT_UPDATED_BY_ADMIN : AUDIT_UPDATED_BY_OWNER, fields));
+        if (!Objects.equals(roleBefore, saved.getRole())) {
+            record(AuditAction.USER_ROLE_CHANGED, id, String.format(AUDIT_ROLE_CHANGED, roleBefore, saved.getRole()));
+        }
+        return saved;
+    }
+
+    /** Người dùng tự sửa hồ sơ: không được đổi email (là subject của JWT), tên đăng nhập có @ phải trùng email của mình. */
+    private void refuseForbiddenOwnerChanges(Long id, User user, UserUpdateDto dto) {
+        String email = dto.getEmail();
+        if (email != null && !email.isBlank() && !email.trim().equalsIgnoreCase(user.getEmail())) {
+            log.warn("Email change refused, userId={}", id);
+            throw new ProfileUpdateRefusedException(MSG_EMAIL_CHANGE_FORBIDDEN);
+        }
+        String username = dto.getUsername();
+        if (username != null && !username.isBlank() && !UsernamePolicy.isAllowed(username, user.getEmail())) {
+            log.warn("Username refused, userId={}", id);
+            throw new ProfileUpdateRefusedException(UsernamePolicy.MESSAGE);
         }
     }
 
-    private String normalizeRole(String role) {
-        String normalized = role.trim().toUpperCase();
-        return normalized.startsWith("ROLE_") ? normalized : "ROLE_" + normalized;
+    /**
+     * Xóa vĩnh viễn một tài khoản không có dữ liệu liên quan. Tài khoản đã có giao dịch (hoặc ngân sách, mục tiêu, thông
+     * báo, đánh giá) chỉ bị khóa: kiểm tra trước khi xóa, vì khi DELETE đã lỗi khóa ngoại thì transaction bị đánh dấu
+     * rollback-only và việc khóa trong cùng transaction sẽ không bao giờ được lưu. Tài khoản ADMIN bị từ chối.
+     */
+    @Transactional
+    public UserDeletionOutcome deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(String.format(MSG_USER_NOT_FOUND, id)));
+        if (Roles.isAdmin(user.getRole())) {
+            log.warn("Deletion of an administrator account refused, userId={}", id);
+            throw new AdminAccountProtectedException(MSG_ADMIN_PROTECTED);
+        }
+        if (userRepository.existsLinkedRecords(id)) {
+            if (user.isActive()) {
+                user.setActive(false);
+                userRepository.save(user);
+                record(AuditAction.USER_STATUS_CHANGED, id, AUDIT_LOCKED_INSTEAD_OF_DELETED);
+            }
+            log.info("User has linked records, locked instead of deleted, userId={}", id);
+            return UserDeletionOutcome.LOCKED;
+        }
+        userRepository.delete(user);
+        userRepository.flush();
+        eventPublisher.publishEvent(StatisticsChangedEvent.of(StatisticsChange.ACCOUNT_DELETED, id));
+        record(AuditAction.USER_DELETED, id, String.format(AUDIT_DELETED, user.getEmail()));
+        log.info("User deleted, userId={}", id);
+        return UserDeletionOutcome.DELETED;
     }
 
     private String buildAdminPlaceholderPhone(String username) {
@@ -71,14 +219,25 @@ public class UserService {
     @org.springframework.transaction.annotation.Transactional
     public void toggleUserStatus(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userId));
+                .orElseThrow(() -> new UserNotFoundException(String.format(MSG_USER_NOT_FOUND, userId)));
 
-        if (user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().toString())) {
-            throw new RuntimeException("Không được phép tác động hoặc thay đổi trạng thái của ADMIN hệ thống!");
+        if (Roles.isAdmin(user.getRole())) {
+            throw new AdminAccountProtectedException(MSG_ADMIN_PROTECTED);
         }
 
         user.setActive(!user.isActive());
         userRepository.save(user);
+        record(AuditAction.USER_STATUS_CHANGED, userId, user.isActive() ? AUDIT_UNLOCKED : AUDIT_LOCKED);
     }
 
+    /** A row about account {@code userId}, by the caller of the request (looked up when the row is written). */
+    private void record(AuditAction action, Long userId, String description) {
+        auditLogService.record(AuditEntry.of(action, AuditActor.currentCaller(), userId, description));
+    }
+
+    private static void addIfChanged(List<String> changedFields, String field, String before, String after) {
+        if (!Objects.equals(before, after)) {
+            changedFields.add(field);
+        }
+    }
 }

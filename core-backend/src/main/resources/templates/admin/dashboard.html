@@ -25,7 +25,7 @@
                     <div class="card-body d-flex align-items-center">
                         <i class="bi bi-people-fill text-success fs-1 me-3"></i>
                         <div>
-                            <h6 class="card-title text-muted mb-1">Tổng User</h6>
+                            <h6 class="card-title text-muted mb-1">Tổng người dùng</h6>
                             <p class="card-text fw-bold fs-4 mb-0" th:text="${totalUsers != null ? totalUsers : '0'}">0</p>
                         </div>
                     </div>
@@ -49,7 +49,7 @@
                     <div class="card-body d-flex align-items-center">
                         <i class="bi bi-exclamation-triangle-fill fs-1 me-3"></i>
                         <div>
-                            <h6 class="card-title mb-1">User sắp cạn ví (< 50k)</h6>
+                            <h6 class="card-title mb-1">Người dùng sắp cạn ví (< 50k)</h6>
                             <p class="card-text fw-bold fs-4 mb-0" th:text="${lowBalanceUsers != null ? lowBalanceUsers.size() : '0'}">0 user</p>
                         </div>
                     </div>
@@ -61,7 +61,7 @@
             <div class="col-lg-7 mb-4">
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white border-bottom pt-3 pb-2">
-                        <h5 class="card-title text-danger fw-bold"><i class="bi bi-bell-fill me-2"></i>Cần chú ý: Danh sách User sắp cạn ví</h5>
+                        <h5 class="card-title text-danger fw-bold"><i class="bi bi-bell-fill me-2"></i>Cần chú ý: Danh sách người dùng sắp cạn ví</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -69,7 +69,7 @@
                                 <thead class="table-light">
                                 <tr>
                                     <th class="ps-3">ID</th>
-                                    <th>Tên User</th>
+                                    <th>Tên người dùng</th>
                                     <th>Số điện thoại</th>
                                     <th class="text-end pe-3">Số dư hiện tại</th>
                                 </tr>
@@ -91,7 +91,7 @@
                                 <tr th:if="${lowBalanceUsers == null or lowBalanceUsers.isEmpty()}">
                                     <td colspan="4" class="text-center py-4 text-success fw-bold">
                                         <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
-                                        Tuyệt vời! Không có User nào sắp cạn ví.
+                                        Tuyệt vời! Không có người dùng nào sắp cạn ví.
                                     </td>
                                 </tr>
                                 </tbody>
@@ -104,7 +104,7 @@
             <div class="col-lg-5 mb-4">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-white border-bottom pt-3 pb-2">
-                        <h5 class="card-title text-primary fw-bold"><i class="bi bi-bar-chart-line-fill me-2"></i>Số lượng Hóa đơn 6 tháng qua</h5>
+                        <h5 class="card-title text-primary fw-bold"><i class="bi bi-bar-chart-line-fill me-2"></i>Số giao dịch 6 tháng qua</h5>
                     </div>
                     <div class="card-body">
                         <div class="chart-container" style="position: relative; height:300px; width:100%">
@@ -117,8 +117,11 @@
         <div class="row mt-4">
             <div class="col-lg-7 mb-4">
                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-bottom pt-3 pb-2">
-                        <h5 class="card-title text-success fw-bold"><i class="bi bi-trophy-fill text-warning me-2"></i>Top 5 Người dùng chi tiêu nhiều nhất</h5>
+                    <div class="card-header bg-white border-bottom pt-3 pb-2 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title text-success fw-bold mb-0"><i class="bi bi-trophy-fill text-warning me-2"></i>Top chi tiêu tháng</h5>
+                        <form method="get" th:action="@{/admin/dashboard}" class="mb-0">
+                            <input type="month" name="month" class="form-control form-control-sm" th:value="${topSpendersMonth}" onchange="this.form.submit()">
+                        </form>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -126,7 +129,7 @@
                                 <thead class="table-light">
                                 <tr>
                                     <th class="ps-3 text-center">Top</th>
-                                    <th>Thông tin User</th>
+                                    <th>Thông tin người dùng</th>
                                     <th class="text-end pe-4">Tổng chi tiêu</th>
                                 </tr>
                                 </thead>
@@ -138,10 +141,10 @@
                                             <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
                                                 <i class="bi bi-person-fill text-primary"></i>
                                             </div>
-                                            <span class="fw-bold fs-6" th:text="${sp[0]}"></span>
+                                            <span class="fw-bold fs-6" th:text="${sp.username}"></span>
                                         </div>
                                     </td>
-                                    <td class="text-end pe-4 text-success fw-bold fs-6" th:text="${#numbers.formatInteger(sp[1], 1, 'POINT') + ' VNĐ'}"></td>
+                                    <td class="text-end pe-4 text-success fw-bold fs-6" th:text="${#numbers.formatInteger(sp.totalSpent, 1, 'POINT') + ' VNĐ'}"></td>
                                 </tr>
                                 <tr th:if="${topSpenders == null or topSpenders.isEmpty()}">
                                     <td colspan="3" class="text-center py-4 text-muted">Chưa có dữ liệu giao dịch.</td>
@@ -169,7 +172,7 @@
 
         <div class="row mt-4">
             <div class="col-12 mb-3 d-flex justify-content-between align-items-center">
-                <h4 class="text-primary fw-bold"><i class="bi bi-cpu-fill me-2"></i>AI Phân Khúc Khách Hàng (Mô hình RFM)</h4>
+                <h4 class="text-primary fw-bold"><i class="bi bi-cpu-fill me-2"></i>Phân khúc khách hàng (RFM)</h4>
                 <button class="btn btn-outline-primary fw-bold" onclick="runAiSegmentation()">
                     <i class="bi bi-magic me-2"></i>Chạy Phân Lớp AI Tự Động
                 </button>
@@ -199,7 +202,7 @@
                                 <thead class="table-light">
                                 <tr>
                                     <th class="ps-3">ID</th>
-                                    <th>Tên User</th>
+                                    <th>Tên người dùng</th>
                                     <th>Email</th>
                                     <th class="text-end pe-4">Nhãn AI</th>
                                 </tr>
@@ -210,10 +213,7 @@
                                     <td class="fw-bold" th:text="${user.username}"></td>
                                     <td th:text="${user.email}"></td>
                                     <td class="text-end pe-4">
-                                        <span th:if="${user.aiLabel == 'VIP'}" class="badge bg-warning text-dark px-3 py-2">VIP</span>
-                                        <span th:if="${user.aiLabel == 'ACTIVE'}" class="badge bg-success px-3 py-2">ACTIVE</span>
-                                        <span th:if="${user.aiLabel == 'AT-RISK'}" class="badge bg-orange px-3 py-2" style="background-color: #fd7e14; color: white;">AT-RISK</span>
-                                        <span th:if="${user.aiLabel == 'CHURN'}" class="badge bg-danger px-3 py-2">CHURN</span>
+                                        <span th:if="${user.aiLabel != null}" class="badge bg-primary px-3 py-2" th:text="${segmentDisplayNames[user.aiLabel] ?: user.aiLabel}"></span>
                                         <span th:if="${user.aiLabel == null}" class="badge bg-secondary px-3 py-2">Chưa phân lớp</span>
                                     </td>
                                 </tr>
@@ -225,8 +225,11 @@
             </div>
         </div>
 
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
         <script th:inline="javascript">
             document.addEventListener("DOMContentLoaded", function() {
+                // ... (Giữ nguyên toàn bộ code vẽ biểu đồ Bar Chart và Pie Chart ở trên) ...
                 const barChartCanvas = document.getElementById("barChartDemo");
 
                 const labelsReal = /*[[${chartLabels != null ? chartLabels : '["T1", "T2", "T3", "T4", "T5", "T6"]'}]]*/ ["T1", "T2", "T3", "T4", "T5", "T6"];
@@ -241,7 +244,7 @@
                         data: {
                             labels: parsedLabels,
                             datasets: [{
-                                label: "Số lượng Hóa đơn",
+                                label: "Số giao dịch",
                                 data: parsedData,
                                 backgroundColor: "rgba(13, 110, 253, 0.7)",
                                 borderColor: "rgba(13, 110, 253, 1)",
@@ -267,12 +270,10 @@
 
                 const groupedDataMap = {};
                 for (let i = 0; i < parsedAiLabels.length; i++) {
-
                     let label = parsedAiLabels[i];
                     if (label === "SUCCESS") label = "Thành công";
                     if (label === "PENDING") label = "Đang xử lý";
                     if (label === "FAILED") label = "Thất bại";
-
 
                     if (groupedDataMap[label]) {
                         groupedDataMap[label] += parsedAiData[i];
@@ -314,20 +315,19 @@
                     });
                 }
             });
+
             const segmentPieCanvas = document.getElementById("segmentPieChart");
-            const vipCount = /*[[${vipCount != null ? vipCount : 0}]]*/ 0;
-            const activeCount = /*[[${activeCount != null ? activeCount : 0}]]*/ 0;
-            const atRiskCount = /*[[${atRiskCount != null ? atRiskCount : 0}]]*/ 0;
-            const churnCount = /*[[${churnCount != null ? churnCount : 0}]]*/ 0;
+            const segmentNames = /*[[${segmentNames}]]*/ [];
+            const segmentData = /*[[${segmentData}]]*/ [];
 
             if (segmentPieCanvas) {
                 new Chart(segmentPieCanvas, {
                     type: "pie",
                     data: {
-                        labels: ["VIP", "ACTIVE", "AT-RISK", "CHURN"],
+                        labels: segmentNames,
                         datasets: [{
-                            data: [vipCount, activeCount, atRiskCount, churnCount],
-                            backgroundColor: ["#ffc107", "#198754", "#fd7e14", "#dc3545"],
+                            data: segmentData,
+                            backgroundColor: ["#ffc107", "#198754", "#0dcaf0", "#6f42c1", "#fd7e14", "#6c757d", "#dc3545"],
                             hoverOffset: 4
                         }]
                     },
@@ -339,10 +339,11 @@
                 });
             }
 
+            // --- ĐÂY LÀ PHẦN CODE ĐÃ ĐƯỢC FIX ---
             window.runAiSegmentation = function() {
                 Swal.fire({
                     title: 'Chạy phân lớp AI?',
-                    text: "Hệ thống sẽ gửi dữ liệu sang máy chủ Python (K-Means) để phân tích lại toàn bộ User. Việc này có thể mất vài giây.",
+                    text: "Hệ thống sẽ gửi số liệu RFM (12 tháng chi tiêu) sang dịch vụ AI để chấm điểm ngũ phân vị cho toàn bộ người dùng. Việc này có thể mất vài giây.",
                     icon: 'info',
                     showCancelButton: true,
                     confirmButtonColor: '#0d6efd',
@@ -352,7 +353,6 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
 
-                        // Hiện thông báo Loading
                         Swal.fire({
                             title: 'Đang xử lý...',
                             html: 'AI đang phân tích mô hình RFM, vui lòng chờ!',
@@ -362,15 +362,27 @@
                             }
                         });
 
+                        // 2. Lấy tự động mã bảo vệ CSRF Token của Spring Security
+                        var csrfToken = /*[[${_csrf != null ? _csrf.token : ''}]]*/ '';
+                        var csrfHeader = /*[[${_csrf != null ? _csrf.headerName : ''}]]*/ '';
+
+                        var headersConfig = {
+                            'Content-Type': 'application/json'
+                        };
+                        if (csrfToken && csrfHeader) {
+                            headersConfig[csrfHeader] = csrfToken; // Gắn vũ khí vượt ải bảo vệ
+                        }
+
                         // Gửi Request sang Java
                         fetch('/admin/ajax/segmentation/run', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                // Nếu Spring Security bật CSRF, em nhớ cấu hình token ở đây nhé
-                            }
+                            headers: headersConfig
                         })
-                            .then(response => response.json())
+                            .then(response => {
+                                // Chặn lỗi văng mã HTML khi Java báo lỗi 403/500
+                                if (!response.ok) throw new Error("HTTP Status " + response.status);
+                                return response.json();
+                            })
                             .then(data => {
                                 if(data.code === 200) {
                                     Swal.fire({
@@ -387,12 +399,11 @@
                                 }
                             })
                             .catch(err => {
-                                Swal.fire('Lỗi kết nối!', 'Không thể gọi đến máy chủ. Hãy kiểm tra AI Service. Lỗi: ' + err, 'error');
+                                Swal.fire('Lỗi kết nối!', 'Không thể gọi đến máy chủ. Hãy kiểm tra Backend hoặc AI Service. Chi tiết: ' + err, 'error');
                             });
                     }
                 });
             };
-            /*]]>*/
         </script>
     </div>
 </div>
