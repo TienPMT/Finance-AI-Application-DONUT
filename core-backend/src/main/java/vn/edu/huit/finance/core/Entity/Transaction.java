@@ -1,21 +1,32 @@
 package vn.edu.huit.finance.core.Entity;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.envers.Audited;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 @Audited
 @Entity
-@Table(name = "transactions")
+@Table(name = "transactions",
+        uniqueConstraints = @UniqueConstraint(name = "uk_transactions_user_client_id", columnNames = {"user_id", "client_id"}),
+        indexes = @Index(name = "idx_transactions_user_date", columnList = "user_id, transaction_date"))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Transaction extends BaseEntity {
+
+    /** Widest client id the column holds; the checkout request refuses a longer one. */
+    public static final int CLIENT_ID_MAX_LENGTH = 64;
+    /** Width of the column behind {@link #source}. */
+    public static final int SOURCE_MAX_LENGTH = 16;
+    /** Width of {@link #reviewNote}. */
+    public static final int REVIEW_NOTE_MAX_LENGTH = 255;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,6 +35,14 @@ public class Transaction extends BaseEntity {
     private BigDecimal amount;
 
     private String note;
+
+    /** Optional user experience rating at the store (0.5 to 5.0 in 0.5 increments). */
+    @Column(name = "rating", precision = 2, scale = 1)
+    private BigDecimal rating;
+
+    /** Optional user review comment about the experience at the store. */
+    @Column(name = "review_note", length = REVIEW_NOTE_MAX_LENGTH)
+    private String reviewNote;
 
     @Column(name = "transaction_date", nullable = false)
     private LocalDateTime transactionDate;
@@ -48,16 +67,45 @@ public class Transaction extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnore
     private Category category;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "receipt_id", referencedColumnName = "id")
+    @JsonIgnore
     private Receipt receipt;
-    @Column(name = "raw_receipt_data", columnDefinition = "TEXT")
+
+    /**
+     * LEGACY, read-only. Where the checkout kept the answer of the AI before receipts had a lifecycle. The copy that counts
+     * is the receipt's attempts now (ReceiptProcessingAttempt). The column stays, so that the older rows lose nothing,
+     * but it is never written again, which is what keeps a second, diverging copy from appearing; what it holds is read
+     * once, to import it as the receipt's first (LEGACY) attempt. Plan: see Receipt.aiRawData, retired together.
+     */
+    @Column(name = "raw_receipt_data", columnDefinition = "TEXT", insertable = false, updatable = false)
     private String rawReceiptData;
+
+    /**
+     * Idempotency key the client made up for one attempt to save this transaction, unique per user. Null when the
+     * transaction was created without one (every older row, the payment webhook's transactions); a null is never a
+     * duplicate of another null.
+     */
+    @Column(name = "client_id", length = CLIENT_ID_MAX_LENGTH)
+    private String clientId;
+
+    /**
+     * Where the transaction comes from. Only NORMAL rows count in the income and spending totals. GOAL_REFUND is the money
+     * of a deleted savings goal going back to the wallet, WALLET_TRANSFER money moved to or from a linked e-wallet: both
+     * move the balance of the wallet, but are neither income nor spending. The column default lets ddl-auto=update add
+     * the column to a table that already has rows, and lets the JDBC inserts that do not name it (demo data) get NORMAL.
+     */
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'NORMAL'")
+    @Column(name = "source", nullable = false, length = SOURCE_MAX_LENGTH)
+    private TransactionSource source = TransactionSource.NORMAL;
 
 }

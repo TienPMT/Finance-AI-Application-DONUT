@@ -1,121 +1,141 @@
 package vn.edu.huit.finance.core.Controller;
 
-import jakarta.persistence.EntityManager;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import vn.edu.huit.finance.core.Dto.AdminDashboardSummaryDto;
+import vn.edu.huit.finance.core.Dto.AdminUserResponseDto;
 import vn.edu.huit.finance.core.Dto.ApiResponse;
+import vn.edu.huit.finance.core.Dto.AuditLogFilterRequestDto;
+import vn.edu.huit.finance.core.Dto.MonthlyTransactionCountDto;
+import vn.edu.huit.finance.core.Dto.ReceiptStatusCountDto;
+import vn.edu.huit.finance.core.Dto.CategoryRenameRequestDto;
+import vn.edu.huit.finance.core.Dto.CategoryRequestDto;
+import vn.edu.huit.finance.core.Dto.SubscriptionPlanRequestDto;
 import vn.edu.huit.finance.core.Dto.UserCreateDto;
 import vn.edu.huit.finance.core.Dto.UserUpdateDto;
 import vn.edu.huit.finance.core.Entity.*;
-import vn.edu.huit.finance.core.Repository.*;
-import vn.edu.huit.finance.core.Service.AuditLogService;
-import vn.edu.huit.finance.core.Service.BackupService;
+import vn.edu.huit.finance.core.Security.Roles;
+import vn.edu.huit.finance.core.Service.AdminStatisticsService;
+import vn.edu.huit.finance.core.Service.AppReviewService;
+import vn.edu.huit.finance.core.Service.Audit.SecurityAuditEvent;
+import vn.edu.huit.finance.core.Service.AuditLogQueryService;
+import vn.edu.huit.finance.core.Service.Backup.ScheduledBackupService;
+import vn.edu.huit.finance.core.Service.Cache.SpendingLeaderboardService;
+import vn.edu.huit.finance.core.Service.CategoryService;
+import vn.edu.huit.finance.core.Service.CustomerSegmentationService;
 import vn.edu.huit.finance.core.Service.LoginAttemptService;
+import vn.edu.huit.finance.core.Service.ReceiptProcessingService;
+import vn.edu.huit.finance.core.Service.SubscriptionPlanService;
+import vn.edu.huit.finance.core.Service.TransactionService;
+import vn.edu.huit.finance.core.Service.UserDeletionOutcome;
 import vn.edu.huit.finance.core.Service.UserService;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.temporal.TemporalAdjusters;
+import java.time.YearMonth;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+/**
+ * The admin pages. Every change made through them is recorded in action_logs: the services below write the row in the
+ * transaction of the change (users, categories, plans, reviews, receipts), and the operations outside the database
+ * (lifting a lockout, the segmentation batch, backups) publish a SecurityAuditEvent once they have run.
+ */
+@Slf4j
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
     private static final int DEFAULT_PAGE_SIZE = 10;
+    static final int MAX_PAGE_SIZE = 100;
+    private static final int TOP_SPENDERS_LIMIT = 5;
+    private static final int SEGMENTED_USERS_LIMIT = 10;
+    private static final int CHART_MONTHS = 6;
+    private static final String CHART_LABEL_PREFIX = "Tháng ";
+    private static final String MSG_USER_DELETED = "Đã xóa vĩnh viễn tài khoản";
+    private static final String MSG_USER_LOCKED_INSTEAD =
+            "Tài khoản đã có dữ liệu (giao dịch, ngân sách...) nên đã được khóa thay vì xóa vĩnh viễn";
+    private static final String AUDIT_UNLOCK = "Gỡ khóa đăng nhập sớm cho email: %s / IP: %s";
+    private static final String AUDIT_SEGMENTATION = "Chạy phân lớp khách hàng RFM (ngũ phân vị): %d người dùng được gán nhãn";
+    private static final String MSG_FILTER_FIELD_INVALID = "Giá trị của %s không hợp lệ";
+    private static final String TYPE_MISMATCH = "typeMismatch";
+    private static final String MSG_BACKUP_TYPE_INVALID = "Loại sao lưu không hợp lệ (chỉ hỗ trợ: toàn bộ, chỉ cấu trúc, chỉ dữ liệu).";
+    private static final String MSG_BACKUP_SUCCESS = "Đã sao lưu %s thành công!";
+    private static final String MSG_BACKUP_FAILED = "Lỗi sao lưu! Kiểm tra lại đường dẫn PostgreSQL.";
+    private static final String MSG_RESTORE_SUCCESS = "Đã phục hồi từ bản sao lưu FULL mới nhất!";
+    private static final String MSG_RESTORE_FAILED = "Lỗi phục hồi! Không tìm thấy bản sao lưu FULL hoặc pg_restore lỗi.";
 
-    @Autowired private UserRepository userRepo;
-    @Autowired private TransactionRepository transactionRepo;
-    @Autowired private CategoryRepository categoryRepo;
-    @Autowired private CampaignRepository campaignRepo;
-    @Autowired private ReceiptRepository receiptRepo;
-    @Autowired private BackupService backupService;
+    @Autowired private CustomerSegmentationService customerSegmentationService;
+    @Autowired private AdminStatisticsService adminStatisticsService;
+    @Autowired private ReceiptProcessingService receiptProcessingService;
+    @Autowired private ObjectProvider<ScheduledBackupService> scheduledBackupService;
     @Autowired private UserService userService;
-    @Autowired private EntityManager entityManager;
-    @Autowired private SubscriptionPlanRepository subscriptionPlanRepository;
-    @Autowired private ActionLogRepository actionLogRepository;
-    @Autowired private AuditLogService auditLogService;
+    @Autowired private TransactionService transactionService;
+    @Autowired private SubscriptionPlanService subscriptionPlanService;
+    @Autowired private CategoryService categoryService;
+    @Autowired private AppReviewService appReviewService;
+    @Autowired private AuditLogQueryService auditLogQueryService;
     @Autowired private LoginAttemptService loginAttemptService;
-    @Autowired private AppReviewRepository appReviewRepository;
+    @Autowired private ApplicationEventPublisher eventPublisher;
+    @Autowired private SpendingLeaderboardService leaderboardService;
+    /**
+     * The aggregates come from AdminStatisticsService, cached in Redis as DTOs (never this Model, never an entity) and
+     * keyed by the month, threshold, page and limit asked for here; the customer segments below are read live.
+     */
     @GetMapping("/dashboard")
-    public String showDashboard(Model model) {
-        BigDecimal totalVolume = transactionRepo.sumTotalVolume();
-        long totalUsers = userRepo.count();
-        List<User> lowBalanceUsers = userRepo.findByWalletBalanceLessThan(new BigDecimal("50000"));
+    public String showDashboard(Model model,
+                                @RequestParam(name = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth requestedMonth) {
+        YearMonth currentMonth = YearMonth.now();
+        YearMonth topSpendersMonth = requestedMonth != null ? requestedMonth : currentMonth;
+        AdminDashboardSummaryDto summary = adminStatisticsService.getDashboardSummary(
+                currentMonth, TransactionService.LOW_BALANCE_THRESHOLD);
 
-        LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endOfMonth = LocalDate.now().with(TemporalAdjusters.lastDayOfMonth()).atTime(23, 59, 59);
+        model.addAttribute("totalVolume", summary.wholeTotalVolume());
+        model.addAttribute("totalUsers", summary.getTotalUsers());
+        model.addAttribute("lowBalanceUsers", summary.getLowBalanceUsers());
+        model.addAttribute("totalTransactionsThisMonth", summary.getTransactionsInPeriod());
 
-        long totalTransactionsThisMonth = transactionRepo.countByTransactionDateBetween(startOfMonth, endOfMonth);
+        model.addAttribute("topSpenders", leaderboardService.topSpenders(topSpendersMonth, TOP_SPENDERS_LIMIT));
+        model.addAttribute("topSpendersMonth", topSpendersMonth.toString());
 
-        model.addAttribute("totalVolume", formatCurrencyWithoutDecimal(totalVolume));
-        model.addAttribute("totalUsers", totalUsers);
-        model.addAttribute("lowBalanceUsers", lowBalanceUsers);
-        model.addAttribute("totalTransactionsThisMonth", totalTransactionsThisMonth);
+        List<MonthlyTransactionCountDto> chart = adminStatisticsService.getMonthlyTransactionCounts(currentMonth, CHART_MONTHS);
+        model.addAttribute("chartLabels", chart.stream()
+                .map(month -> CHART_LABEL_PREFIX + month.getMonth().getMonthValue())
+                .toList());
+        model.addAttribute("chartData", chart.stream().map(MonthlyTransactionCountDto::getTransactionCount).toList());
 
-        List<Object[]> aiStats = receiptRepo.getReceiptStatusStatistics();
-        model.addAttribute("aiStats", aiStats);
-
-        List<Object[]> topSpenders = transactionRepo.findTopSpenders(PageRequest.of(0, 5));
-        model.addAttribute("topSpenders", topSpenders);
-
-
-        List<String> chartLabels = new java.util.ArrayList<>();
-        List<Long> chartData = new java.util.ArrayList<>();
-
-
-        for (int i = 5; i >= 0; i--) {
-            LocalDate monthDate = LocalDate.now().minusMonths(i);
-            chartLabels.add("Tháng " + monthDate.getMonthValue());
-
-
-            LocalDateTime start = monthDate.withDayOfMonth(1).atStartOfDay();
-            LocalDateTime end = monthDate.with(TemporalAdjusters.lastDayOfMonth()).atTime(23, 59, 59);
-
-
-            long count = transactionRepo.countByTransactionDateBetween(start, end);
-            chartData.add(count);
+        // Nhiều trạng thái (chờ duyệt, đang đọc...) cùng hiện là "Đang xử lý": gộp theo nhãn để biểu đồ không có lát trùng tên.
+        Map<String, Long> receiptsByLabel = new LinkedHashMap<>();
+        for (ReceiptStatusCountDto receiptStatus : summary.getReceiptStatuses()) {
+            receiptsByLabel.merge(ReceiptStatus.dashboardLabelOf(receiptStatus.getStatus()), receiptStatus.getCount(), Long::sum);
         }
-
-
-        model.addAttribute("chartLabels", chartLabels);
-        model.addAttribute("chartData", chartData);
-        List<String> aiLabels = new java.util.ArrayList<>();
-        List<Long> aiData = new java.util.ArrayList<>();
-
-        for (Object[] obj : aiStats) {
-            String status = String.valueOf(obj[0]);
-
-            if ("SUCCESS".equals(status)) status = "Thành công";
-            else if ("FAILED".equals(status)) status = "Lỗi AI";
-            else status = "Đang xử lý";
-
-            aiLabels.add(status);
-            aiData.add(((Number) obj[1]).longValue());
-        }
-
-        model.addAttribute("aiLabels", aiLabels);
-        model.addAttribute("aiData", aiData);
-        model.addAttribute("vipCount", userRepo.countByAiLabel("VIP"));
-        model.addAttribute("activeCount", userRepo.countByAiLabel("ACTIVE"));
-        model.addAttribute("atRiskCount", userRepo.countByAiLabel("AT-RISK"));
-        model.addAttribute("churnCount", userRepo.countByAiLabel("CHURN"));
-        Page<User> segmentedUsers = userRepo.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id")));
+        model.addAttribute("aiLabels", List.copyOf(receiptsByLabel.keySet()));
+        model.addAttribute("aiData", List.copyOf(receiptsByLabel.values()));
+        Map<CustomerSegment, Long> segmentCounts = customerSegmentationService.countBySegment();
+        model.addAttribute("segmentNames", segmentCounts.keySet().stream().map(CustomerSegment::getDisplayName).toList());
+        model.addAttribute("segmentData", List.copyOf(segmentCounts.values()));
+        model.addAttribute("segmentDisplayNames", Arrays.stream(CustomerSegment.values())
+                .collect(Collectors.toMap(CustomerSegment::name, CustomerSegment::getDisplayName)));
+        Page<User> segmentedUsers = userService.listEndUsersNewestFirst(PageRequest.of(0, SEGMENTED_USERS_LIMIT));
         model.addAttribute("segmentedUsers", segmentedUsers.getContent());
         return "admin/dashboard";
     }
@@ -129,21 +149,21 @@ public class AdminController {
 
     @GetMapping("/categories")
     public String showCategories(Model model) {
-        List<Category> categories = categoryRepo.findAll();
-        model.addAttribute("categories", categories);
+        model.addAttribute("categories", categoryService.listAll());
         return "admin/categories";
     }
 
     @GetMapping("/receipts")
     public String showReceipts(
             @RequestParam(defaultValue = "0") int receiptPage,
-            @RequestParam(defaultValue = "0") int userPage,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
-        addUserAndReceiptPages(
-                model,
-                PageRequest.of(Math.max(userPage, 0), normalizePageSize(size), Sort.by(Sort.Direction.DESC, "id")),
+        // Trang hóa đơn chỉ còn danh sách hóa đơn (Duyệt / Từ chối); quản lý tài khoản nằm ở /admin/users.
+        Page<Receipt> receiptsPage = receiptProcessingService.listNewestFirst(
                 PageRequest.of(Math.max(receiptPage, 0), normalizePageSize(size)));
+        model.addAttribute("receipts", receiptsPage.getContent());
+        model.addAttribute("receiptsPage", receiptsPage);
+        model.addAttribute("pageSize", normalizePageSize(size));
         return "admin/receipts";
     }
 
@@ -152,26 +172,26 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int userPage,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
-        Page<User> usersPage = userRepo.findAll(PageRequest.of(Math.max(userPage, 0), normalizePageSize(size), Sort.by(Sort.Direction.DESC, "id")));
+        Page<User> usersPage = userService.listNewestFirst(PageRequest.of(Math.max(userPage, 0), normalizePageSize(size)));
         model.addAttribute("users", usersPage.getContent());
         model.addAttribute("usersPage", usersPage);
-        model.addAttribute("pageSize", size);
+        model.addAttribute("pageSize", normalizePageSize(size));
         return "admin/users";
     }
 
+    // Closed to everybody without ROLE_ADMIN twice, by the /admin/** rule of SecurityConfig and by @PreAuthorize: the two
+    // services behind these handlers take no user and trust their caller to be an administrator.
     @PostMapping("/receipts/approve/{id}")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public String approveReceipt(@PathVariable Long id) {
-        Receipt receipt = receiptRepo.findById(id).orElseThrow();
-        receipt.setStatus("SUCCESS");
-        receiptRepo.save(receipt);
+        transactionService.approveReceipt(id);
         return "redirect:/admin/receipts";
     }
 
     @PostMapping("/receipts/reject/{id}")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public String rejectReceipt(@PathVariable Long id) {
-        Receipt receipt = receiptRepo.findById(id).orElseThrow();
-        receipt.setStatus("FAILED");
-        receiptRepo.save(receipt);
+        receiptProcessingService.rejectReceipt(id);
         return "redirect:/admin/receipts";
     }
 
@@ -180,117 +200,73 @@ public class AdminController {
 
     @GetMapping("/subscriptions")
     public String viewSubscriptions(Model model) {
-        List<SubscriptionPlan> plans = subscriptionPlanRepository.findAll();
-        model.addAttribute("plans", plans);
+        model.addAttribute("plans", subscriptionPlanService.listAll());
         return "admin/subscriptions";
     }
     @PostMapping("/subscriptions/add")
     public String addSubscription(
-            @RequestParam String planName,
-            @RequestParam Double price,
-            @RequestParam Integer durationDays,
-            @RequestParam Integer maxAiScans,
+            @Valid @ModelAttribute SubscriptionPlanRequestDto values,
             @RequestParam(defaultValue = "false") boolean isWcmSpadeEnabled) {
-
-        SubscriptionPlan plan = new SubscriptionPlan();
-        plan.setPlanName(planName);
-        plan.setPrice(price);
-        plan.setDurationDays(durationDays);
-        plan.setMaxAiScans(maxAiScans);
-        plan.setWcmSpadeEnabled(isWcmSpadeEnabled);
-        plan.setActive(true);
-
-        subscriptionPlanRepository.save(plan);
+        // The form field is named isWcmSpadeEnabled, which does not bind to the DTO's wcmSpadeEnabled by itself.
+        values.setWcmSpadeEnabled(values.isWcmSpadeEnabled() || isWcmSpadeEnabled);
+        subscriptionPlanService.createPlan(values);
 
         return "redirect:/admin/subscriptions";
     }
 
     @PostMapping("/ajax/users")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> createUserAjax(@Valid @RequestBody UserCreateDto dto) {
-        try {
-            User user = userService.createUser(dto);
-            String adminEmail = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-            auditLogService.logAction(adminEmail, "CREATE_USER", "Admin tạo tài khoản mới: " + user.getEmail());
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<Map<String, Object>>builder()
-                    .code(201)
-                    .message("Tạo tài khoản thành công")
-                    .data(toUserResponse(user))
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Map<String, Object>>builder()
-                    .code(400)
-                    .message(e.getMessage())
-                    .build());
-        }
+    @PreAuthorize(Roles.HAS_ADMIN)
+    public ResponseEntity<ApiResponse<AdminUserResponseDto>> createUserAjax(@Valid @RequestBody UserCreateDto dto) {
+        // Recorded by UserService (USER_CREATED, by the caller) in the transaction of the creation. A refusal (bad role,
+        // duplicate email...) is answered by GlobalExceptionHandler, never with the raw exception message.
+        User user = userService.createUser(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<AdminUserResponseDto>builder()
+                .code(201)
+                .message("Tạo tài khoản thành công")
+                .data(AdminUserResponseDto.from(user))
+                .build());
     }
 
     @PutMapping("/ajax/users/{id}")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> updateUserAjax(
+    @PreAuthorize(Roles.HAS_ADMIN)
+    public ResponseEntity<ApiResponse<AdminUserResponseDto>> updateUserAjax(
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateDto dto) {
-        try {
-            User user = userService.updateUser(id, dto);
-            String adminEmail = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-            auditLogService.logAction(adminEmail, "UPDATE_USER", "Admin sửa thông tin tài khoản: " + user.getEmail());
-
-            return ResponseEntity.ok(ApiResponse.<Map<String, Object>>builder()
-                    .code(200)
-                    .message("Cập nhật thông tin thành công")
-                    .data(toUserResponse(user))
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Map<String, Object>>builder()
-                    .code(400)
-                    .message(e.getMessage())
-                    .build());
-        }
+        // Recorded by UserService (USER_UPDATED, and USER_ROLE_CHANGED for a new role) in the transaction of the update.
+        User user = userService.updateUser(id, dto);
+        return ResponseEntity.ok(ApiResponse.<AdminUserResponseDto>builder()
+                .code(200)
+                .message("Cập nhật thông tin thành công")
+                .data(AdminUserResponseDto.from(user))
+                .build());
     }
 
     @DeleteMapping("/ajax/users/{id}")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public ResponseEntity<ApiResponse<Void>> deleteUserAjax(@PathVariable Long id) {
-        try {
-            userService.deleteUser(id);
-            String adminEmail = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-            auditLogService.logAction(adminEmail, "DELETE_USER", "Xóa vĩnh viễn tài khoản ID: #" + id);
-
-            return ResponseEntity.ok(ApiResponse.<Void>builder()
-                    .code(200)
-                    .message("Xóa tài khoản thành công")
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
-                    .code(400)
-                    .message(e.getMessage())
-                    .build());
-        }
+        // Recorded by UserService (USER_DELETED, or USER_STATUS_CHANGED when it only locks) in its transaction.
+        // An ADMIN account or an unknown id is answered by GlobalExceptionHandler (403 / 404).
+        UserDeletionOutcome outcome = userService.deleteUser(id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(200)
+                .message(outcome == UserDeletionOutcome.DELETED ? MSG_USER_DELETED : MSG_USER_LOCKED_INSTEAD)
+                .build());
     }
 
     @PutMapping("/ajax/users/{id}/toggle-status")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public ResponseEntity<ApiResponse<Void>> toggleUserStatusAjax(@PathVariable Long id) {
-        try {
-            userService.toggleUserStatus(id);
-            String adminEmail = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-            auditLogService.logAction(adminEmail, "TOGGLE_USER", "Khóa / Mở khóa tài khoản ID: #" + id);
-
-            return ResponseEntity.ok(ApiResponse.<Void>builder()
-                    .code(200)
-                    .message("Cập nhật trạng thái thành công")
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
-                    .code(400)
-                    .message(e.getMessage())
-                    .build());
-        }
+        // Recorded by UserService (USER_STATUS_CHANGED) in the transaction of the change. An ADMIN account or an unknown
+        // id is answered by GlobalExceptionHandler (403 / 404).
+        userService.toggleUserStatus(id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(200)
+                .message("Cập nhật trạng thái thành công")
+                .build());
     }
 
     @GetMapping("/backup")
@@ -303,295 +279,193 @@ public class AdminController {
     @ResponseBody
     public Map<String, Object> executeBackup(@RequestParam("type") String type) {
         Map<String, Object> response = new HashMap<>();
-
-        boolean isSuccess = backupService.backupDatabase(type);
-
-        if (isSuccess) {
-            response.put("success", true);
-            response.put("message", "Đã sao lưu toàn bộ dữ liệu thành công!");
-        } else {
+        Optional<BackupType> backupType = BackupType.fromParam(type);
+        if (backupType.isEmpty()) {
             response.put("success", false);
-            response.put("message", "Lỗi sao lưu! Kiểm tra lại đường dẫn PostgreSQL.");
+            response.put("message", MSG_BACKUP_TYPE_INVALID);
+            return response;
         }
+
+        boolean isSuccess = scheduledBackupService.getObject().backupNow(backupType.get());
+
+        response.put("success", isSuccess);
+        response.put("message", isSuccess
+                ? String.format(MSG_BACKUP_SUCCESS, backupType.get().getLabel())
+                : MSG_BACKUP_FAILED);
         return response;
     }
 
-
+    // Chỉ phục hồi từ bản FULL mới nhất (bản schema-only / data-only không đủ để dựng lại cơ sở dữ liệu).
     @PostMapping("/backup/restore")
     @ResponseBody
-    public Map<String, Object> executeRestore(@RequestParam(value = "type", defaultValue = "FULL") String type) {
+    public Map<String, Object> executeRestore() {
         Map<String, Object> response = new HashMap<>();
 
-        boolean isSuccess = backupService.restoreLatest(type);
+        boolean isSuccess = scheduledBackupService.getObject().restoreLatestFullNow();
 
-        if (isSuccess) {
-            response.put("success", true);
-            response.put("message", "Đã phục hồi từ bản backup " + type + " mới nhất!");
-        } else {
-            response.put("success", false);
-            response.put("message", "Lỗi phục hồi! Không tìm thấy file backup " + type + " hoặc pg_restore lỗi.");
-        }
+        response.put("success", isSuccess);
+        response.put("message", isSuccess ? MSG_RESTORE_SUCCESS : MSG_RESTORE_FAILED);
         return response;
     }
 
     @PostMapping("/ajax/subscriptions")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> createSubscriptionAjax(@RequestBody SubscriptionPlan plan) {
-        plan.setActive(true);
-        subscriptionPlanRepository.save(plan);
-        logAdminAction("CREATE_PLAN", "Tạo gói hội viên mới: " + plan.getPlanName());
-        return ResponseEntity.ok(ApiResponse.<Void>builder().code(201).message("Thành công").build());
+    @PreAuthorize(Roles.HAS_ADMIN)
+    public ResponseEntity<ApiResponse<Void>> createSubscriptionAjax(@Valid @RequestBody SubscriptionPlanRequestDto plan) {
+        subscriptionPlanService.createPlan(plan);
+        return ResponseEntity.ok(ApiResponse.<Void>builder().code(HttpStatus.OK.value()).message("Thành công").build());
     }
 
     @PutMapping("/ajax/subscriptions/{id}")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> updateSubscriptionAjax(@PathVariable Long id, @RequestBody SubscriptionPlan dto) {
-        SubscriptionPlan plan = subscriptionPlanRepository.findById(id).orElseThrow();
-        plan.setPlanName(dto.getPlanName());
-        plan.setPrice(dto.getPrice());
-        plan.setDurationDays(dto.getDurationDays());
-        plan.setMaxAiScans(dto.getMaxAiScans());
-        plan.setWcmSpadeEnabled(dto.isWcmSpadeEnabled());
-        subscriptionPlanRepository.save(plan);
-
-        logAdminAction("UPDATE_PLAN", "Cập nhật thông tin gói: " + plan.getPlanName());
+    @PreAuthorize(Roles.HAS_ADMIN)
+    public ResponseEntity<ApiResponse<Void>> updateSubscriptionAjax(@PathVariable Long id,
+                                                                @Valid @RequestBody SubscriptionPlanRequestDto dto) {
+        subscriptionPlanService.updatePlan(id, dto);
         return ResponseEntity.ok(ApiResponse.<Void>builder().code(200).message("Thành công").build());
     }
 
     @PutMapping("/ajax/subscriptions/{id}/toggle")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public ResponseEntity<ApiResponse<Void>> toggleSubscriptionAjax(@PathVariable Long id) {
-        SubscriptionPlan plan = subscriptionPlanRepository.findById(id).orElseThrow();
-        plan.setActive(!plan.isActive());
-        subscriptionPlanRepository.save(plan);
-
-        logAdminAction("TOGGLE_PLAN", (plan.isActive() ? "Mở bán" : "Tạm ẩn") + " gói: " + plan.getPlanName());
+        subscriptionPlanService.togglePlan(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder().code(200).build());
     }
 
     @DeleteMapping("/ajax/subscriptions/{id}")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public ResponseEntity<ApiResponse<Void>> deleteSubscriptionAjax(@PathVariable Long id) {
-        SubscriptionPlan plan = subscriptionPlanRepository.findById(id).orElseThrow();
-        subscriptionPlanRepository.delete(plan);
-
-        logAdminAction("DELETE_PLAN", "Xóa vĩnh viễn gói: " + plan.getPlanName());
+        subscriptionPlanService.deletePlan(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder().code(200).build());
     }
 
+    /**
+     * The activity log: the newest {@value AuditLogQueryService#LATEST_LIMIT} rows of the data tab and of the security
+     * tab, as before, the summary of the last days, and a filtered, paged search (also served as JSON by
+     * GET /api/admin/audit-logs). Nothing here loads the whole table.
+     */
     @GetMapping("/auditlog")
-    public String showAuditLog(Model model) {
-        List<ActionLog> systemLogs = actionLogRepository.findTop200ByActionNotContainingOrderByTimestampDesc("LOGIN");
-
-        List<ActionLog> loginAttempts = actionLogRepository.findTop200ByActionContainingOrderByTimestampDesc("LOGIN");
-
-        List<Map<String, Object>> auditSummary = actionLogRepository.getAuditSummary();
-
-        model.addAttribute("systemLogs", systemLogs);
-        model.addAttribute("loginAttempts", loginAttempts);
-        model.addAttribute("auditSummary", auditSummary);
-
+    @PreAuthorize(Roles.HAS_ADMIN)
+    public String showAuditLog(@Valid @ModelAttribute("filter") AuditLogFilterRequestDto filter, BindingResult filterErrors,
+                               Model model) {
+        model.addAttribute("systemLogs", auditLogQueryService.latestOtherEvents());
+        model.addAttribute("loginAttempts", auditLogQueryService.latestSecurityEvents());
+        model.addAttribute("auditSummary", auditLogQueryService.summary());
+        model.addAttribute("summaryWindowDays", AuditLogQueryService.SUMMARY_WINDOW_DAYS);
+        model.addAttribute("auditActions", AuditAction.values());
+        model.addAttribute("auditTargetTypes", AuditTargetType.values());
+        model.addAttribute("searchRequested", filterErrors.hasErrors() || filter.hasCriteria());
+        if (filterErrors.hasErrors()) {
+            model.addAttribute("filterError", filterErrors.getAllErrors().stream()
+                    .map(AdminController::filterErrorMessage)
+                    .collect(Collectors.joining(", ")));
+        } else {
+            model.addAttribute("searchPage", auditLogQueryService.search(filter));
+        }
         return "admin/auditlog";
     }
 
-    private void addUserAndReceiptPages(Model model, Pageable userPageable, Pageable receiptPageable) {
-        Page<User> usersPage = userRepo.findAll(userPageable);
-        Page<Receipt> receiptsPage = receiptRepo.findAllByOrderByCreatedAtDesc(receiptPageable);
-
-        model.addAttribute("users", usersPage.getContent());
-        model.addAttribute("usersPage", usersPage);
-        model.addAttribute("receipts", receiptsPage.getContent());
-        model.addAttribute("receiptsPage", receiptsPage);
-        model.addAttribute("pageSize", userPageable.getPageSize());
+    /** The validation message of a filter, or a short one of ours for a value that did not even convert (no class names). */
+    private static String filterErrorMessage(ObjectError error) {
+        if (error instanceof FieldError fieldError && TYPE_MISMATCH.equals(fieldError.getCode())) {
+            return String.format(MSG_FILTER_FIELD_INVALID, fieldError.getField());
+        }
+        return error.getDefaultMessage();
     }
 
-    private int normalizePageSize(int size) {
-        return size > 0 ? size : DEFAULT_PAGE_SIZE;
-    }
-
-    private String formatCurrencyWithoutDecimal(BigDecimal amount) {
-        BigDecimal safeAmount = amount != null ? amount : BigDecimal.ZERO;
-        return safeAmount.setScale(0, RoundingMode.DOWN).toPlainString();
-    }
-
-    private Map<String, Object> toUserResponse(User user) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
-        response.put("username", user.getUsername());
-        response.put("email", user.getEmail());
-        response.put("role", user.getRole());
-        response.put("isActive", user.isActive());
-        return response;
-    }
-    private void logAdminAction(String action, String description) {
-        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        String email = (auth != null && auth.getName() != null) ? auth.getName() : "System Admin";
-
-        ActionLog log = new ActionLog();
-        log.setUserEmail(email);
-        log.setAction(action);
-        log.setDescription(description);
-        log.setTimestamp(LocalDateTime.now());
-        actionLogRepository.save(log);
+    /** Cỡ trang của các trang admin: mặc định khi không hợp lệ, tối đa MAX_PAGE_SIZE để ?size=1000000 không tải cả bảng. */
+    static int normalizePageSize(int size) {
+        return size > 0 ? Math.min(size, MAX_PAGE_SIZE) : DEFAULT_PAGE_SIZE;
     }
 
     @PostMapping("/ajax/categories")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> addCategoryAjax(@RequestParam String name, @RequestParam String type) {
-        Category category = new Category();
-        category.setName(name);
-        category.setType(type);
-        categoryRepo.save(category);
-
-        logAdminAction("CREATE_CATEGORY", "Thêm danh mục mới: " + name + " (" + type + ")");
-        return ResponseEntity.ok(ApiResponse.<Void>builder().code(201).message("Thêm thành công").build());
+    @PreAuthorize(Roles.HAS_ADMIN)
+    public ResponseEntity<ApiResponse<Void>> addCategoryAjax(@Valid @ModelAttribute CategoryRequestDto dto) {
+        categoryService.createCategory(dto.getName(), dto.getType());
+        return ResponseEntity.ok(ApiResponse.<Void>builder().code(HttpStatus.OK.value()).message("Thêm thành công").build());
     }
 
     @PutMapping("/ajax/categories/{id}")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> updateCategoryAjax(@PathVariable Long id, @RequestParam String name) {
-        Category category = categoryRepo.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục"));
-        String oldName = category.getName();
-        category.setName(name);
-        categoryRepo.save(category);
-
-        logAdminAction("UPDATE_CATEGORY", "Sửa danh mục: " + oldName + " ➡ " + name);
+    @PreAuthorize(Roles.HAS_ADMIN)
+    public ResponseEntity<ApiResponse<Void>> updateCategoryAjax(@PathVariable Long id,
+                                                             @Valid @ModelAttribute CategoryRenameRequestDto dto) {
+        categoryService.renameCategory(id, dto.getName());
         return ResponseEntity.ok(ApiResponse.<Void>builder().code(200).message("Cập nhật thành công").build());
     }
 
     @DeleteMapping("/ajax/categories/{id}")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public ResponseEntity<ApiResponse<Void>> deleteCategoryAjax(@PathVariable Long id) {
-        Category category = categoryRepo.findById(id).orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục"));
-        try {
-            categoryRepo.deleteById(id);
-            categoryRepo.flush();
-
-            logAdminAction("DELETE_CATEGORY", "Xóa danh mục: " + category.getName());
-            return ResponseEntity.ok(ApiResponse.<Void>builder().code(200).message("Xóa thành công").build());
-        } catch (Exception e) {
-            throw new RuntimeException("Không thể xóa danh mục [" + category.getName() + "] vì đang có giao dịch sử dụng nó!");
-        }
+        categoryService.deleteCategory(id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder().code(200).message("Xóa thành công").build());
     }
     @PostMapping("/ajax/security/unlock")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public ResponseEntity<ApiResponse<Void>> unlockUserOrIp(
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String ipAddress) {
-        try {
-            loginAttemptService.resetAttempts(email, ipAddress);
-
-            String adminEmail = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-            auditLogService.logAction(adminEmail, "SECURITY_UNLOCK", "Admin can thiệp gỡ khóa sớm cho Email: " + email + " / IP: " + ipAddress, ipAddress);
-
-            return ResponseEntity.ok(ApiResponse.<Void>builder()
-                    .code(200)
-                    .message("Đã gỡ khóa giải ban thành công!")
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
-                    .code(400)
-                    .message("Gỡ khóa thất bại: " + e.getMessage())
-                    .build());
-        }
+        loginAttemptService.resetAttempts(email, ipAddress);
+        // The lockout lives in memory, outside any transaction: recorded once lifted, in a row of its own.
+        eventPublisher.publishEvent(SecurityAuditEvent.ofCurrentCaller(AuditAction.AUTH_LOGIN_UNLOCKED,
+                String.format(AUDIT_UNLOCK, email, ipAddress)));
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(200)
+                .message("Đã gỡ khóa giải ban thành công!")
+                .build());
 
     }
 
     @GetMapping("/reviews")
-    public String showReviews(Model model) {
-        List<AppReview> reviews = appReviewRepository.findAllByOrderByCreatedAtDesc();
-        model.addAttribute("reviews", reviews);
+    public String showReviews(
+            @RequestParam(defaultValue = "0") int reviewPage,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+        Page<AppReview> reviewsPage = appReviewService.listNewestFirst(
+                PageRequest.of(Math.max(reviewPage, 0), normalizePageSize(size)));
+        model.addAttribute("reviews", reviewsPage.getContent());
+        model.addAttribute("reviewsPage", reviewsPage);
+        model.addAttribute("pageSize", normalizePageSize(size));
         return "admin/reviews";
     }
 
     @PostMapping("/ajax/reviews/{id}/approve")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public ResponseEntity<ApiResponse<Void>> approveReviewAjax(@PathVariable Long id) {
-        try {
-            AppReview review = appReviewRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
-            review.setStatus("APPROVED");
-            appReviewRepository.save(review);
-
-            logAdminAction("APPROVE_REVIEW", "Duyệt hiển thị đánh giá của user: " + review.getUserEmail());
-
-            return ResponseEntity.ok(ApiResponse.<Void>builder()
-                    .code(200)
-                    .message("Đã duyệt đánh giá thành công!")
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Void>builder().code(400).message(e.getMessage()).build());
-        }
+        // An unknown id is a 404 from GlobalExceptionHandler.
+        appReviewService.approveReview(id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(200)
+                .message("Đã duyệt đánh giá thành công!")
+                .build());
     }
 
     @DeleteMapping("/ajax/reviews/{id}")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public ResponseEntity<ApiResponse<Void>> deleteReviewAjax(@PathVariable Long id) {
-        try {
-            AppReview review = appReviewRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
-            appReviewRepository.delete(review);
-
-            logAdminAction("DELETE_REVIEW", "Xóa đánh giá vi phạm của: " + review.getUserEmail());
-
-            return ResponseEntity.ok(ApiResponse.<Void>builder()
-                    .code(200)
-                    .message("Đã xóa đánh giá thành công!")
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Void>builder().code(400).message(e.getMessage()).build());
-        }
+        appReviewService.deleteReview(id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .code(200)
+                .message("Đã xóa đánh giá thành công!")
+                .build());
     }
     @PostMapping("/ajax/segmentation/run")
     @ResponseBody
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(Roles.HAS_ADMIN)
     public ResponseEntity<ApiResponse<Void>> runAiSegmentation() {
-        try {
+        int assigned = customerSegmentationService.runSegmentation();
 
-            List<Object[]> rfmData = userRepo.calculateAllUsersRFM();
-            List<Map<String, Object>> userRFMs = new java.util.ArrayList<>();
+        // Mọi nhãn đã ghi trong một giao dịch: chỉ ghi nhật ký sau khi nó đã commit, ở một dòng riêng.
+        eventPublisher.publishEvent(SecurityAuditEvent.ofCurrentCaller(AuditAction.SYSTEM_SEGMENTATION_RUN,
+                String.format(AUDIT_SEGMENTATION, assigned)));
 
-            for (Object[] row : rfmData) {
-                Map<String, Object> rfm = new HashMap<>();
-                rfm.put("user_id", row[0].toString());
-                rfm.put("recency", ((Number) row[1]).intValue());
-                rfm.put("frequency", ((Number) row[2]).intValue());
-                rfm.put("monetary", ((Number) row[3]).doubleValue());
-                userRFMs.add(rfm);
-            }
-
-
-            Map<String, Object> requestBody = Map.of("users", userRFMs);
-            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
-            ResponseEntity<Map> response = restTemplate.postForEntity(
-                    "http://localhost:8000/admin/segment", requestBody, Map.class
-            );
-
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                List<Map<String, String>> segments = (List<Map<String, String>>) response.getBody().get("segments");
-                for (Map<String, String> seg : segments) {
-                    userRepo.updateUserAiLabel(Long.parseLong(seg.get("user_id")), seg.get("label"));
-                }
-
-                String adminEmail = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-                auditLogService.logAction(adminEmail, "AI_SEGMENT", "Chạy phân lớp khách hàng (RFM + K-Means) thành công");
-
-                return ResponseEntity.ok(ApiResponse.<Void>builder().code(200).message("Phân lớp hoàn tất").build());
-            }
-            throw new RuntimeException("Python AI Service không trả về kết quả.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.<Void>builder().code(400).message(e.getMessage()).build());
-        }
+        return ResponseEntity.ok(ApiResponse.<Void>builder().code(200).message("Phân lớp hoàn tất").build());
     }
 }
