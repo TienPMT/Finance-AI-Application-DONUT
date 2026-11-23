@@ -1,0 +1,3769 @@
+{
+  "@@locale": "en",
+  "settings": "Settings",
+  "@settings": {
+    "description": "Title of the settings screen."
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Label of the language setting."
+  },
+  "theme": "Theme",
+  "@theme": {
+    "description": "Label of the theme setting."
+  },
+  "dark": "Dark",
+  "@dark": {
+    "description": "Dark theme option."
+  },
+  "light": "Light",
+  "@light": {
+    "description": "Light theme option."
+  },
+  "system": "System",
+  "@system": {
+    "description": "Theme option that follows the device setting."
+  },
+  "systemThemeDescription": "Follows your device setting",
+  "@systemThemeDescription": {
+    "description": "Subtitle of the System theme option."
+  },
+  "english": "English",
+  "@english": {
+    "description": "Name of the English language, written in English in every locale so that its speakers can find it."
+  },
+  "vietnamese": "Tiếng Việt",
+  "@vietnamese": {
+    "description": "Name of the Vietnamese language, written in Vietnamese in every locale so that its speakers can find it."
+  },
+  "settingsSaveFailed": "Couldn't save this setting. The change applies until you close the app.",
+  "@settingsSaveFailed": {
+    "description": "Snackbar shown when a theme or language choice could not be written to the device."
+  },
+  "notificationsTitle": "Notifications",
+  "@notificationsTitle": {
+    "description": "Title of the notification screen, also the tooltip of the bell on the home screen."
+  },
+  "notificationsMarkAllRead": "Mark all as read",
+  "@notificationsMarkAllRead": {
+    "description": "App bar action of the notification screen that marks every notification as read."
+  },
+  "notificationsEmpty": "You have no notifications yet.",
+  "@notificationsEmpty": {
+    "description": "Shown on the notification screen when the user has no notification at all."
+  },
+  "notificationsLoadFailed": "Couldn't load your notifications.",
+  "@notificationsLoadFailed": {
+    "description": "Shown when the list of notifications could not be loaded from the server."
+  },
+  "notificationsLoadMoreFailed": "Couldn't load more notifications.",
+  "@notificationsLoadMoreFailed": {
+    "description": "Shown at the end of the list when the next page of notifications could not be loaded."
+  },
+  "notificationsRetry": "Try again",
+  "@notificationsRetry": {
+    "description": "Button that asks the server for the notifications again after a failure."
+  },
+  "notificationsMarkReadFailed": "Couldn't mark the notification as read. Please try again.",
+  "@notificationsMarkReadFailed": {
+    "description": "Snackbar shown when the server refused or missed marking one notification as read; it shows as unread again."
+  },
+  "notificationsMarkAllReadFailed": "Couldn't mark your notifications as read. Please try again.",
+  "@notificationsMarkAllReadFailed": {
+    "description": "Snackbar shown when marking every notification as read failed; they show as unread again."
+  },
+  "notificationsTransactionNotFound": "The transaction of this notification wasn't found; it may have been deleted.",
+  "@notificationsTransactionNotFound": {
+    "description": "Snackbar on the Ledger when a tapped notification points to a transaction that is not in the user's list (for example deleted)."
+  },
+  "notificationsUnread": "Unread",
+  "@notificationsUnread": {
+    "description": "Screen reader label of the dot that marks an unread notification."
+  },
+  "notificationTypeBudgetWarning": "Budget almost used up",
+  "@notificationTypeBudgetWarning": {
+    "description": "Heading of a notification saying that spending reached 80% of a budget."
+  },
+  "notificationTypeBudgetExceeded": "Budget exceeded",
+  "@notificationTypeBudgetExceeded": {
+    "description": "Heading of a notification saying that spending reached or passed 100% of a budget."
+  },
+  "notificationTypeTransactionAlert": "Transaction alert",
+  "@notificationTypeTransactionAlert": {
+    "description": "Heading of a notification about one transaction."
+  },
+  "notificationTypeReceiptProcessed": "Receipt processed",
+  "@notificationTypeReceiptProcessed": {
+    "description": "Heading of a notification saying that a receipt has been processed."
+  },
+  "notificationTypeOther": "Notification",
+  "@notificationTypeOther": {
+    "description": "Heading of a notification whose kind this version of the app does not know."
+  },
+  "notificationsEmptyHint": "Budget, transaction and receipt alerts will show up here.",
+  "@notificationsEmptyHint": {
+    "description": "Line under the empty-state title of the notification list."
+  },
+  "notificationsYesterdayAt": "Yesterday, {time}",
+  "@notificationsYesterdayAt": {
+    "description": "Time of a notification from yesterday in the notification list.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "19:20"
+      }
+    }
+  },
+  "notificationDetailTitle": "Notification details",
+  "@notificationDetailTitle": {
+    "description": "Title of the sheet that shows the whole of a notification."
+  },
+  "notificationDetailType": "Type",
+  "@notificationDetailType": {
+    "description": "Label of the kind row in the notification details sheet."
+  },
+  "notificationDetailTime": "Time",
+  "@notificationDetailTime": {
+    "description": "Label of the date and time row in the notification details sheet."
+  },
+  "sessionEnded": "Your session has ended, for example because your password was changed. Please sign in again.",
+  "@sessionEnded": {
+    "description": "SnackBar shown on the login screen after the app signed the user out because the session could not be renewed, e.g. the password was changed or reset on another device."
+  },
+  "dialogGotIt": "Got it",
+  "@dialogGotIt": {
+    "description": "Button that closes an error dialog."
+  },
+  "forgotPasswordTitle": "Forgot password",
+  "@forgotPasswordTitle": {
+    "description": "App bar title of the forgot-password screen, the first step of the password recovery."
+  },
+  "forgotPasswordDescription": "Enter the email of your account. We'll send you a one-time code (OTP) to set a new password.",
+  "@forgotPasswordDescription": {
+    "description": "Explains on the forgot-password screen that a one-time code will be emailed to the address typed below."
+  },
+  "forgotPasswordEmailLabel": "Email",
+  "@forgotPasswordEmailLabel": {
+    "description": "Label above the email field of the forgot-password screen."
+  },
+  "forgotPasswordEmailHint": "Enter your email address",
+  "@forgotPasswordEmailHint": {
+    "description": "Hint inside the empty email field of the forgot-password screen."
+  },
+  "forgotPasswordEmailRequired": "Please enter your email.",
+  "@forgotPasswordEmailRequired": {
+    "description": "Error under the email field when the user asks for a code without typing an email."
+  },
+  "forgotPasswordEmailInvalid": "Please enter a valid email address.",
+  "@forgotPasswordEmailInvalid": {
+    "description": "Error under the email field when what was typed is not an email address."
+  },
+  "forgotPasswordRemembered": "Remembered it? ",
+  "@forgotPasswordRemembered": {
+    "description": "Forgot-password footer, before the bold sign-in link"
+  },
+  "forgotPasswordSendOtp": "Send code",
+  "@forgotPasswordSendOtp": {
+    "description": "Button of the forgot-password screen that asks the server to email a one-time code."
+  },
+  "forgotPasswordSendFailed": "Couldn't send the code",
+  "@forgotPasswordSendFailed": {
+    "description": "Title of the error dialog shown when the one-time code could not be sent or sent again."
+  },
+  "forgotPasswordRejected": "The code couldn't be sent. Please check the email and try again.",
+  "@forgotPasswordRejected": {
+    "description": "Error dialog text when the server refused to send a one-time code without saying why."
+  },
+  "resetPasswordTitle": "Reset password",
+  "@resetPasswordTitle": {
+    "description": "App bar title of the reset-password screen, where the user types the one-time code and a new password."
+  },
+  "resetPasswordDescription": "Enter the code we sent to {email}, then choose a new password.",
+  "@resetPasswordDescription": {
+    "description": "Description of the reset-password screen. The email is shown partly hidden.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "an***@gmail.com"
+      }
+    }
+  },
+  "resetPasswordOtpLabel": "Verification code (OTP)",
+  "@resetPasswordOtpLabel": {
+    "description": "Label above the one-time code field of the reset-password screen."
+  },
+  "resetPasswordOtpRequired": "Please enter the code.",
+  "@resetPasswordOtpRequired": {
+    "description": "Error under the one-time code field when it is empty."
+  },
+  "resetPasswordOtpInvalid": "The code must be exactly {length} digits.",
+  "@resetPasswordOtpInvalid": {
+    "description": "Error under the one-time code field when it does not hold exactly the expected number of digits.",
+    "placeholders": {
+      "length": {
+        "type": "int",
+        "example": "6"
+      }
+    }
+  },
+  "resetPasswordResendOtp": "Resend code",
+  "@resetPasswordResendOtp": {
+    "description": "Button that emails a new one-time code to the same address."
+  },
+  "resetPasswordResendIn": "Resend code in {seconds}s",
+  "@resetPasswordResendIn": {
+    "description": "Disabled resend button while the user has to wait before asking for another code.",
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "example": "42"
+      }
+    }
+  },
+  "resetPasswordOtpResent": "A new code has been sent. Please check your email.",
+  "@resetPasswordOtpResent": {
+    "description": "SnackBar shown when a new one-time code has been sent."
+  },
+  "resetPasswordNewPasswordLabel": "New password",
+  "@resetPasswordNewPasswordLabel": {
+    "description": "Label above the new password field of the reset-password screen."
+  },
+  "resetPasswordNewPasswordHint": "Enter a new password",
+  "@resetPasswordNewPasswordHint": {
+    "description": "Hint inside the empty new password field."
+  },
+  "resetPasswordPasswordRequired": "Please enter a new password.",
+  "@resetPasswordPasswordRequired": {
+    "description": "Error under the new password field when it is empty."
+  },
+  "resetPasswordPasswordPolicy": "{min} to {max} characters, with at least one letter and one digit.",
+  "@resetPasswordPasswordPolicy": {
+    "description": "The password rules, shown under the new password field, in the error colour when the password breaks them.",
+    "placeholders": {
+      "min": {
+        "type": "int",
+        "example": "8"
+      },
+      "max": {
+        "type": "int",
+        "example": "72"
+      }
+    }
+  },
+  "resetPasswordConfirmPasswordLabel": "Confirm new password",
+  "@resetPasswordConfirmPasswordLabel": {
+    "description": "Label above the field where the new password is typed a second time."
+  },
+  "resetPasswordConfirmPasswordHint": "Enter the new password again",
+  "@resetPasswordConfirmPasswordHint": {
+    "description": "Hint inside the empty confirmation field."
+  },
+  "resetPasswordConfirmRequired": "Please confirm the new password.",
+  "@resetPasswordConfirmRequired": {
+    "description": "Error under the confirmation field when it is empty."
+  },
+  "resetPasswordMismatch": "The passwords don't match.",
+  "@resetPasswordMismatch": {
+    "description": "Error under the confirmation field when it differs from the new password."
+  },
+  "resetPasswordSubmit": "Reset password",
+  "@resetPasswordSubmit": {
+    "description": "Button that sets the new password with the one-time code."
+  },
+  "resetPasswordSubmitting": "Processing...",
+  "@resetPasswordSubmitting": {
+    "description": "Label of the disabled reset button while the request is on its way."
+  },
+  "resetPasswordSuccessTitle": "Password reset",
+  "@resetPasswordSuccessTitle": {
+    "description": "Title of the dialog shown when the password has been reset."
+  },
+  "resetPasswordSuccessMessage": "Your password has been changed. Please sign in with your new password.",
+  "@resetPasswordSuccessMessage": {
+    "description": "Text of the dialog shown when the password has been reset; the user is not signed in automatically."
+  },
+  "resetPasswordBackToLogin": "Back to sign in",
+  "@resetPasswordBackToLogin": {
+    "description": "Button of the success dialog that opens the login screen."
+  },
+  "resetPasswordFailed": "Couldn't reset your password",
+  "@resetPasswordFailed": {
+    "description": "Title of the error dialog shown when the password could not be reset."
+  },
+  "resetPasswordRejected": "Your password couldn't be reset. Please check the code and try again.",
+  "@resetPasswordRejected": {
+    "description": "Error dialog text when the server refused the reset without saying why."
+  },
+  "passwordShow": "Show password",
+  "@passwordShow": {
+    "description": "Tooltip of the eye button that shows a hidden password."
+  },
+  "passwordHide": "Hide password",
+  "@passwordHide": {
+    "description": "Tooltip of the eye button that hides a shown password."
+  },
+  "passwordRecoverySending": "Sending...",
+  "@passwordRecoverySending": {
+    "description": "Label of a disabled send or resend button while the one-time code request is on its way."
+  },
+  "passwordRecoveryNetworkError": "Can't reach the server. Please check your connection and try again.",
+  "@passwordRecoveryNetworkError": {
+    "description": "Error dialog text when a password recovery request got no answer from the server."
+  },
+  "passwordRecoveryTimeout": "The server is taking too long to respond. Please try again.",
+  "@passwordRecoveryTimeout": {
+    "description": "Error dialog text when a password recovery request timed out."
+  },
+  "passwordRecoveryServerError": "The server ran into a problem. Please try again later.",
+  "@passwordRecoveryServerError": {
+    "description": "Error dialog text when the server failed (5xx) on a password recovery request."
+  },
+  "passwordRecoveryUnexpectedError": "Something went wrong. Please try again.",
+  "@passwordRecoveryUnexpectedError": {
+    "description": "Error dialog text when a password recovery request failed for a reason the app does not know."
+  },
+  "navHome": "Home",
+  "@navHome": {
+    "description": "Label of the Home tab in the bottom bar."
+  },
+  "navLedger": "Statistics",
+  "@navLedger": {
+    "description": "Label of the Ledger tab in the bottom bar."
+  },
+  "navAi": "AI",
+  "@navAi": {
+    "description": "Label of the AI tab in the bottom bar."
+  },
+  "navProfile": "Profile",
+  "@navProfile": {
+    "description": "Label of the Profile tab in the bottom bar."
+  },
+  "scanSheetTitle": "Scan a receipt with AI",
+  "@scanSheetTitle": {
+    "description": "Title of the sheet opened by the scan button."
+  },
+  "scanSheetSubtitle": "Choose how to add receipts",
+  "@scanSheetSubtitle": {
+    "description": "Line under the scan sheet title."
+  },
+  "scanOptionCamera": "Scan with camera",
+  "@scanOptionCamera": {
+    "description": "Scan sheet: one receipt with the camera."
+  },
+  "scanOptionCameraHint": "One receipt, check and save now",
+  "@scanOptionCameraHint": {
+    "description": "Explains the camera option."
+  },
+  "scanOptionGallery": "Pick from gallery",
+  "@scanOptionGallery": {
+    "description": "Scan sheet: one photo from the gallery."
+  },
+  "scanOptionGalleryHint": "One photo already on the phone",
+  "@scanOptionGalleryHint": {
+    "description": "Explains the gallery option."
+  },
+  "scanOptionBatch": "Scan many",
+  "@scanOptionBatch": {
+    "description": "Scan sheet: several receipts with the camera."
+  },
+  "scanOptionBatchHint": "Keep shooting, AI reads them in the background",
+  "@scanOptionBatchHint": {
+    "description": "Explains the batch camera option."
+  },
+  "scanOptionBatchGallery": "Pick many photos",
+  "@scanOptionBatchGallery": {
+    "description": "Scan sheet: several photos from the gallery."
+  },
+  "scanOptionBatchGalleryHint": "Several photos at once, confirm later",
+  "@scanOptionBatchGalleryHint": {
+    "description": "Explains the batch gallery option."
+  },
+  "scanScannerFailedTitle": "Couldn't open the scanner",
+  "@scanScannerFailedTitle": {
+    "description": "Error dialog title when the document scanner fails to open."
+  },
+  "scanScannerFailedMessage": "Please try again or pick a photo from the gallery.",
+  "@scanScannerFailedMessage": {
+    "description": "Error dialog text when the document scanner fails to open."
+  },
+  "scanGalleryFailedTitle": "Couldn't open the photo gallery",
+  "@scanGalleryFailedTitle": {
+    "description": "Error dialog title when the photo gallery fails to open."
+  },
+  "scanGalleryFailedMessage": "Please check the app's photo access and try again.",
+  "@scanGalleryFailedMessage": {
+    "description": "Error dialog text when the photo gallery fails to open."
+  },
+  "dialogDone": "Done",
+  "@dialogDone": {
+    "description": "Default button of a success dialog."
+  },
+  "dialogConfirm": "Confirm",
+  "@dialogConfirm": {
+    "description": "Default confirm button of a confirmation dialog."
+  },
+  "dialogCancel": "Cancel",
+  "@dialogCancel": {
+    "description": "Default cancel button of a confirmation dialog."
+  },
+  "errorNetwork": "Can't reach the server. Please check your connection and try again.",
+  "@errorNetwork": {
+    "description": "A request got no answer from the server."
+  },
+  "errorTimeout": "The server is taking too long to respond. Please try again.",
+  "@errorTimeout": {
+    "description": "A request timed out."
+  },
+  "errorServer": "The server ran into a problem. Please try again later.",
+  "@errorServer": {
+    "description": "The server failed (5xx)."
+  },
+  "errorSessionExpired": "Your session has expired. Please sign in again.",
+  "@errorSessionExpired": {
+    "description": "The server answered 401 without a message."
+  },
+  "errorUnexpected": "Something went wrong. Please try again.",
+  "@errorUnexpected": {
+    "description": "A request failed for a reason the app does not know."
+  },
+  "transactionRefused": "The server refused this transaction. Please check the details.",
+  "@transactionRefused": {
+    "description": "The server refused a transaction (4xx) without a message the app can show."
+  },
+  "defaultUserName": "User",
+  "@defaultUserName": {
+    "description": "Name shown for an account that has neither a username nor an email."
+  },
+  "mainWalletName": "Main wallet",
+  "@mainWalletName": {
+    "description": "Name of the single wallet of the user."
+  },
+  "syncStatusPending": "Waiting to send",
+  "@syncStatusPending": {
+    "description": "Badge of a transaction saved on the device but not confirmed by the server yet."
+  },
+  "syncStatusSynced": "Synced",
+  "@syncStatusSynced": {
+    "description": "Badge of a transaction the server has."
+  },
+  "syncStatusError": "Send failed",
+  "@syncStatusError": {
+    "description": "Badge of a transaction whose last send failed."
+  },
+  "receiptStatusProcessing": "Processing",
+  "@receiptStatusProcessing": {
+    "description": "Badge of a receipt that is being read or reviewed."
+  },
+  "receiptStatusSuccess": "Completed",
+  "@receiptStatusSuccess": {
+    "description": "Badge of a receipt that was read and confirmed."
+  },
+  "receiptStatusFailed": "Failed · confirm again",
+  "@receiptStatusFailed": {
+    "description": "Badge of a receipt that could not be read or was rejected."
+  },
+  "transactionSourceGoalRefund": "Savings goal refund",
+  "@transactionSourceGoalRefund": {
+    "description": "Label on a transaction: the money of a deleted savings goal going back to the wallet. It is not income."
+  },
+  "transactionSourceWalletTransfer": "Linked wallet transfer",
+  "@transactionSourceWalletTransfer": {
+    "description": "Label on a transaction: money moved between the wallet of the app and a linked e-wallet. It is neither income nor spending."
+  },
+  "budgetPeriodWeek": "Week",
+  "@budgetPeriodWeek": {
+    "description": "Weekly budget period."
+  },
+  "budgetPeriodMonth": "Month",
+  "@budgetPeriodMonth": {
+    "description": "Monthly budget period."
+  },
+  "budgetAllCategories": "All categories",
+  "@budgetAllCategories": {
+    "description": "What a budget without a category is called."
+  },
+  "dateTodayAt": "Today, {time}",
+  "@dateTodayAt": {
+    "description": "Date of a transaction made today, with its time (HH:mm).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dateYesterdayAt": "Yesterday, {time}",
+  "@dateYesterdayAt": {
+    "description": "Date of a transaction made yesterday, with its time (HH:mm).",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "passwordEmpty": "Password can't be empty.",
+  "@passwordEmpty": {
+    "description": "Validation error: the password is empty."
+  },
+  "passwordLength": "Password must be {min} to {max} characters long.",
+  "@passwordLength": {
+    "description": "Validation error: the password is too short or too long.",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "passwordLetterAndDigit": "Password must contain at least one letter and one digit.",
+  "@passwordLetterAndDigit": {
+    "description": "Validation error: the password lacks a letter or a digit."
+  },
+  "currencyVnd": "{amount} đ",
+  "@currencyVnd": {
+    "description": "An amount in Vietnamese dong; the unit stays VND in every language.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyThousandShort": "{amount}K",
+  "@currencyThousandShort": {
+    "description": "A compact amount in thousands of dong, e.g. 850K.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyMillionShort": "{amount}M",
+  "@currencyMillionShort": {
+    "description": "A compact amount in millions of dong, e.g. 18.5M.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyBillionShort": "{amount}B",
+  "@currencyBillionShort": {
+    "description": "A compact amount in billions of dong, e.g. 1.2B.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "weekdayShortMon": "Mon",
+  "@weekdayShortMon": {
+    "description": "Short name of Monday, under a chart bar."
+  },
+  "weekdayShortTue": "Tue",
+  "@weekdayShortTue": {
+    "description": "Short name of Tuesday, under a chart bar."
+  },
+  "weekdayShortWed": "Wed",
+  "@weekdayShortWed": {
+    "description": "Short name of Wednesday, under a chart bar."
+  },
+  "weekdayShortThu": "Thu",
+  "@weekdayShortThu": {
+    "description": "Short name of Thursday, under a chart bar."
+  },
+  "weekdayShortFri": "Fri",
+  "@weekdayShortFri": {
+    "description": "Short name of Friday, under a chart bar."
+  },
+  "weekdayShortSat": "Sat",
+  "@weekdayShortSat": {
+    "description": "Short name of Saturday, under a chart bar."
+  },
+  "weekdayShortSun": "Sun",
+  "@weekdayShortSun": {
+    "description": "Short name of Sunday, under a chart bar."
+  },
+  "categoryAll": "All",
+  "@categoryAll": {
+    "description": "Category filter that shows every category."
+  },
+  "categoryFood": "Food & drinks",
+  "@categoryFood": {
+    "description": "Default category stored by the backend as \"Ăn uống\" (DefaultCategory)."
+  },
+  "categoryGroceries": "Groceries & markets",
+  "@categoryGroceries": {
+    "description": "Default category stored by the backend as \"Siêu thị & Chợ\" (DefaultCategory)."
+  },
+  "categoryTransport": "Transport",
+  "@categoryTransport": {
+    "description": "Default category stored by the backend as \"Di chuyển\" (DefaultCategory)."
+  },
+  "categoryHousing": "Housing",
+  "@categoryHousing": {
+    "description": "Default category stored by the backend as \"Nhà ở\" (DefaultCategory)."
+  },
+  "categoryUtilities": "Electricity & water",
+  "@categoryUtilities": {
+    "description": "Default category stored by the backend as \"Điện nước\" (DefaultCategory)."
+  },
+  "categoryTelecom": "Internet & phone",
+  "@categoryTelecom": {
+    "description": "Default category stored by the backend as \"Internet & Điện thoại\" (DefaultCategory)."
+  },
+  "categoryShopping": "Shopping",
+  "@categoryShopping": {
+    "description": "Default category stored by the backend as \"Mua sắm\" (DefaultCategory)."
+  },
+  "categoryHealth": "Health",
+  "@categoryHealth": {
+    "description": "Default category stored by the backend as \"Sức khỏe\" (DefaultCategory)."
+  },
+  "categoryEducation": "Education",
+  "@categoryEducation": {
+    "description": "Default category stored by the backend as \"Giáo dục\" (DefaultCategory)."
+  },
+  "categoryEntertainment": "Entertainment",
+  "@categoryEntertainment": {
+    "description": "Default category stored by the backend as \"Giải trí\" (DefaultCategory)."
+  },
+  "categoryTravel": "Travel",
+  "@categoryTravel": {
+    "description": "Default category stored by the backend as \"Du lịch\" (DefaultCategory)."
+  },
+  "categoryFamily": "Family & children",
+  "@categoryFamily": {
+    "description": "Default category stored by the backend as \"Gia đình & Con cái\" (DefaultCategory)."
+  },
+  "categorySocial": "Weddings & funerals",
+  "@categorySocial": {
+    "description": "Default category stored by the backend as \"Hiếu hỉ\" (DefaultCategory)."
+  },
+  "categoryInsurance": "Insurance",
+  "@categoryInsurance": {
+    "description": "Default category stored by the backend as \"Bảo hiểm\" (DefaultCategory)."
+  },
+  "categoryOtherExpense": "Other",
+  "@categoryOtherExpense": {
+    "description": "Default category stored by the backend as \"Khác\" (DefaultCategory)."
+  },
+  "categorySalary": "Salary",
+  "@categorySalary": {
+    "description": "Default category stored by the backend as \"Lương\" (DefaultCategory)."
+  },
+  "categoryBonus": "Bonus",
+  "@categoryBonus": {
+    "description": "Default category stored by the backend as \"Thưởng\" (DefaultCategory)."
+  },
+  "categoryBusiness": "Business",
+  "@categoryBusiness": {
+    "description": "Default category stored by the backend as \"Kinh doanh\" (DefaultCategory)."
+  },
+  "categoryInvestment": "Investment",
+  "@categoryInvestment": {
+    "description": "Default category stored by the backend as \"Đầu tư\" (DefaultCategory)."
+  },
+  "categoryGift": "Gifts received",
+  "@categoryGift": {
+    "description": "Default category stored by the backend as \"Được tặng\" (DefaultCategory)."
+  },
+  "categoryOtherIncome": "Other income",
+  "@categoryOtherIncome": {
+    "description": "Default category stored by the backend as \"Thu khác\" (DefaultCategory)."
+  },
+  "authMissingInfoTitle": "Missing information",
+  "@authMissingInfoTitle": {
+    "description": "Title of the dialog shown when a required field of a form is empty."
+  },
+  "authEmailLabel": "Email",
+  "@authEmailLabel": {
+    "description": "Label of the email field on the login and register screens."
+  },
+  "authEmailHint": "Enter your email address",
+  "@authEmailHint": {
+    "description": "Hint of the email field on the login and register screens."
+  },
+  "authPasswordLabel": "Password",
+  "@authPasswordLabel": {
+    "description": "Label of the password field on the login and register screens."
+  },
+  "authPasswordHint": "Enter your password",
+  "@authPasswordHint": {
+    "description": "Hint of the password field on the login and register screens."
+  },
+  "authProcessing": "Processing...",
+  "@authProcessing": {
+    "description": "Button text while a login or save request is running."
+  },
+  "loginFailedTitle": "Login failed",
+  "@loginFailedTitle": {
+    "description": "Title of the dialog shown when login fails."
+  },
+  "loginWrongCredentials": "Wrong email or password.",
+  "@loginWrongCredentials": {
+    "description": "Shown when the server answers 401 to a login."
+  },
+  "loginSocialFailed": "Could not sign in with your social account. Please try again.",
+  "@loginSocialFailed": {
+    "description": "Shown when a Google or Facebook login fails for an unknown reason."
+  },
+  "loginMissingCredentials": "Please enter your email and password.",
+  "@loginMissingCredentials": {
+    "description": "Shown when the login form is submitted with an empty field."
+  },
+  "loginInvalidResponse": "The server sent an invalid response. Please try again.",
+  "@loginInvalidResponse": {
+    "description": "Shown when the login answer has no user id."
+  },
+  "loginTagline": "Smart personal finance",
+  "@loginTagline": {
+    "description": "Tagline under the app name on the login screen."
+  },
+  "loginRememberMe": "Remember me",
+  "@loginRememberMe": {
+    "description": "Checkbox label on the login screen."
+  },
+  "loginForgotPassword": "Forgot password?",
+  "@loginForgotPassword": {
+    "description": "Link from the login screen to the password recovery."
+  },
+  "loginSubmit": "Log in",
+  "@loginSubmit": {
+    "description": "Login button."
+  },
+  "loginNoAccount": "No account yet? ",
+  "@loginNoAccount": {
+    "description": "First part of the sign-up link on the login screen; keep the trailing space."
+  },
+  "loginSignUpNow": "Sign up now",
+  "@loginSignUpNow": {
+    "description": "Second, highlighted part of the sign-up link on the login screen."
+  },
+  "loginOrContinueWith": "Or log in with",
+  "@loginOrContinueWith": {
+    "description": "Divider text above the social login buttons."
+  },
+  "registerHeading": "Create an account",
+  "@registerHeading": {
+    "description": "Heading of the register screen."
+  },
+  "registerDescription": "Fill in your details to start managing your finances.",
+  "@registerDescription": {
+    "description": "Text under the heading of the register screen."
+  },
+  "registerFullNameLabel": "Full name",
+  "@registerFullNameLabel": {
+    "description": "Label of the full name field on the register screen."
+  },
+  "registerFullNameHint": "Enter your full name",
+  "@registerFullNameHint": {
+    "description": "Hint of the full name field on the register screen."
+  },
+  "registerPhoneLabel": "Phone number",
+  "@registerPhoneLabel": {
+    "description": "Label of the phone field on the register screen."
+  },
+  "registerPhoneHint": "Enter your phone number",
+  "@registerPhoneHint": {
+    "description": "Hint of the phone field on the register screen."
+  },
+  "registerSubmit": "Create account",
+  "@registerSubmit": {
+    "description": "Register button."
+  },
+  "registerHaveAccount": "Already have an account? ",
+  "@registerHaveAccount": {
+    "description": "Register footer, before the bold sign-in link"
+  },
+  "registerOrContinueWith": "Or sign up with",
+  "@registerOrContinueWith": {
+    "description": "Divider text above the social sign-up buttons."
+  },
+  "registerTermsPrefix": "By signing up, you agree to the ",
+  "@registerTermsPrefix": {
+    "description": "First part of the terms sentence; keep the trailing space."
+  },
+  "registerTerms": "Terms",
+  "@registerTerms": {
+    "description": "Highlighted part of the terms sentence."
+  },
+  "registerTermsAnd": " and ",
+  "@registerTermsAnd": {
+    "description": "Joins the two highlighted parts of the terms sentence; keep both spaces."
+  },
+  "registerConditions": "Conditions of use",
+  "@registerConditions": {
+    "description": "Last highlighted part of the terms sentence."
+  },
+  "registerMissingFields": "Please fill in every field (including the phone number).",
+  "@registerMissingFields": {
+    "description": "Shown when the register form is submitted with an empty field."
+  },
+  "registerWeakPasswordTitle": "Weak password",
+  "@registerWeakPasswordTitle": {
+    "description": "Title of the dialog shown when the password does not meet the rules."
+  },
+  "registerWeakPasswordMessage": "The password does not meet the requirements yet.",
+  "@registerWeakPasswordMessage": {
+    "description": "Shown when the password misses a rule of the checklist."
+  },
+  "registerSuccessTitle": "Sign-up successful",
+  "@registerSuccessTitle": {
+    "description": "Title of the dialog shown after a successful sign-up."
+  },
+  "registerSuccessMessage": "Your account has been created. Please log in.",
+  "@registerSuccessMessage": {
+    "description": "Message of the dialog shown after a successful sign-up."
+  },
+  "registerFailedTitle": "Sign-up failed",
+  "@registerFailedTitle": {
+    "description": "Title of the dialog shown when sign-up fails."
+  },
+  "registerSocialFailed": "Could not sign up with your social account. Please try again.",
+  "@registerSocialFailed": {
+    "description": "Shown when a Google or Facebook sign-up fails for an unknown reason."
+  },
+  "registerPasswordNeeds": "Your password needs:",
+  "@registerPasswordNeeds": {
+    "description": "Heading of the password checklist."
+  },
+  "registerRuleMinLength": "At least {min} characters",
+  "@registerRuleMinLength": {
+    "description": "Password checklist rule.",
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "registerRuleUppercase": "An uppercase letter (A-Z)",
+  "@registerRuleUppercase": {
+    "description": "Password checklist rule."
+  },
+  "registerRuleLowercase": "A lowercase letter (a-z)",
+  "@registerRuleLowercase": {
+    "description": "Password checklist rule."
+  },
+  "registerRuleDigit": "A digit (0-9)",
+  "@registerRuleDigit": {
+    "description": "Password checklist rule."
+  },
+  "registerRuleSpecial": "A special character (!@#...)",
+  "@registerRuleSpecial": {
+    "description": "Password checklist rule."
+  },
+  "commonSaveChanges": "Save changes",
+  "@commonSaveChanges": {
+    "description": "Save button of the profile edit forms."
+  },
+  "credentialsTitle": "Account",
+  "@credentialsTitle": {
+    "description": "App bar title of the account credentials screen."
+  },
+  "credentialsChangePassword": "Change password",
+  "@credentialsChangePassword": {
+    "description": "Heading of the change password form."
+  },
+  "credentialsOldPassword": "Current password",
+  "@credentialsOldPassword": {
+    "description": "Label of the current password field."
+  },
+  "credentialsOldPasswordRequired": "Please enter your current password.",
+  "@credentialsOldPasswordRequired": {
+    "description": "Shown when the current password field is empty."
+  },
+  "credentialsPasswordMismatch": "The new passwords do not match.",
+  "@credentialsPasswordMismatch": {
+    "description": "Shown when the confirmation differs from the new password."
+  },
+  "credentialsChangePasswordFailed": "Could not change the password",
+  "@credentialsChangePasswordFailed": {
+    "description": "Title of the dialog shown when the password change fails."
+  },
+  "credentialsChangePasswordRejected": "The password was not changed. Please check your current password and try again.",
+  "@credentialsChangePasswordRejected": {
+    "description": "Shown when the server refuses the password change (4xx) in a language the server does not write."
+  },
+  "credentialsChangePasswordSuccessTitle": "Password changed",
+  "@credentialsChangePasswordSuccessTitle": {
+    "description": "Title of the dialog shown after the password change."
+  },
+  "accountInfoTitle": "Account information",
+  "@accountInfoTitle": {
+    "description": "App bar title of the account information screen."
+  },
+  "accountInfoSignInAgain": "Please log in again.",
+  "@accountInfoSignInAgain": {
+    "description": "Shown when an account row is tapped without a session."
+  },
+  "accountSecurityTitle": "Security",
+  "@accountSecurityTitle": {
+    "description": "Caption of the security group on the account information screen."
+  },
+  "accountEmailLocked": "The sign-in email cannot be changed",
+  "@accountEmailLocked": {
+    "description": "Spoken label of the lock on the email row of the account information screen."
+  },
+  "accountEditNameTitle": "Edit full name",
+  "@accountEditNameTitle": {
+    "description": "Title of the sheet that edits the full name."
+  },
+  "accountEditPhoneTitle": "Edit phone number",
+  "@accountEditPhoneTitle": {
+    "description": "Title of the sheet that edits the phone number."
+  },
+  "accountPhoneRequired": "Please enter a phone number.",
+  "@accountPhoneRequired": {
+    "description": "Toast when the phone sheet is saved empty; the server cannot clear the phone."
+  },
+  "changePasswordDoneMessage": "Your new password is in use. Other devices need to sign in again.",
+  "@changePasswordDoneMessage": {
+    "description": "Message of the success view after the password change."
+  },
+  "changePasswordMatches": "Matches the new password",
+  "@changePasswordMatches": {
+    "description": "Spoken label of the tick shown when the confirmation matches the new password."
+  },
+  "userInfoTitle": "Personal information",
+  "@userInfoTitle": {
+    "description": "Title of the personal information screen and its row."
+  },
+  "userInfoNotSet": "Not set",
+  "@userInfoNotSet": {
+    "description": "Shown instead of an empty phone number."
+  },
+  "commonSuccess": "Success",
+  "@commonSuccess": {
+    "description": "Title of a success dialog."
+  },
+  "commonSaveFailed": "Could not save",
+  "@commonSaveFailed": {
+    "description": "Title of the dialog shown when a save fails."
+  },
+  "commonSaving": "Saving...",
+  "@commonSaving": {
+    "description": "Save button text while the save is running."
+  },
+  "commonRetry": "Try again",
+  "@commonRetry": {
+    "description": "Retry button."
+  },
+  "setUserInfoLoadFailed": "Could not load your personal information. Please try again.",
+  "@setUserInfoLoadFailed": {
+    "description": "Shown when the profile edit screen cannot read the profile."
+  },
+  "setUserInfoNameRequired": "Please enter your full name.",
+  "@setUserInfoNameRequired": {
+    "description": "Shown when the full name is empty."
+  },
+  "setUserInfoPhoneInvalid": "Invalid phone number (10 digits starting with 0).",
+  "@setUserInfoPhoneInvalid": {
+    "description": "Shown when the phone number does not match the format."
+  },
+  "setUserInfoSaved": "Your personal information has been saved.",
+  "@setUserInfoSaved": {
+    "description": "Message of the dialog shown after the profile is saved."
+  },
+  "profileUtilities": "Utilities",
+  "@profileUtilities": {
+    "description": "Section title on the profile screen."
+  },
+  "profileMoneySources": "Money sources",
+  "@profileMoneySources": {
+    "description": "Profile row that opens the money sources sheet."
+  },
+  "profileLinkedServices": "Linked services",
+  "@profileLinkedServices": {
+    "description": "Profile row that opens the linked services screen."
+  },
+  "profileBudget": "Budgets",
+  "@profileBudget": {
+    "description": "Profile row that opens the budget screen."
+  },
+  "profileSecurityPrivacy": "Security & privacy",
+  "@profileSecurityPrivacy": {
+    "description": "Profile row that opens the security menu."
+  },
+  "profileSupport": "Support",
+  "@profileSupport": {
+    "description": "Section title on the profile screen."
+  },
+  "profileHelp": "User guide",
+  "@profileHelp": {
+    "description": "Profile row that opens the user guide."
+  },
+  "profileFeedback": "Send feedback",
+  "@profileFeedback": {
+    "description": "Profile row that opens the feedback form."
+  },
+  "profileAbout": "About the app",
+  "@profileAbout": {
+    "description": "Profile row that opens the about sheet."
+  },
+  "profileLogout": "Log out",
+  "@profileLogout": {
+    "description": "Logout row and the confirm button of the logout dialog."
+  },
+  "profileLogoutConfirmTitle": "Log out?",
+  "@profileLogoutConfirmTitle": {
+    "description": "Title of the logout confirmation."
+  },
+  "profileLogoutConfirmMessage": "Are you sure you want to log out?",
+  "@profileLogoutConfirmMessage": {
+    "description": "Message of the logout confirmation."
+  },
+  "commonSave": "Save",
+  "@commonSave": {
+    "description": "Short save button of sheets and dialogs."
+  },
+  "notificationSettingsTitle": "Notification settings",
+  "@notificationSettingsTitle": {
+    "description": "Title of the notification settings sheet."
+  },
+  "notificationSettingsPush": "Push notifications",
+  "@notificationSettingsPush": {
+    "description": "Switch of the notification settings sheet."
+  },
+  "notificationSettingsBudgetAlert": "Budget alerts",
+  "@notificationSettingsBudgetAlert": {
+    "description": "Switch of the notification settings sheet."
+  },
+  "notificationSettingsSaved": "Notification settings saved.",
+  "@notificationSettingsSaved": {
+    "description": "Snackbar after the notification settings are saved."
+  },
+  "moneySourcesEmpty": "No wallets yet.",
+  "@moneySourcesEmpty": {
+    "description": "Shown in the money sources sheet without wallets."
+  },
+  "activityLogTitle": "Activity history",
+  "@activityLogTitle": {
+    "description": "Security menu row that opens the activity history."
+  },
+  "activityLogSubtitle": "See your recent transactions",
+  "@activityLogSubtitle": {
+    "description": "Subtitle of the activity history row."
+  },
+  "activityLogTitleCount": "Activity history ({count})",
+  "@activityLogTitleCount": {
+    "description": "Title of the activity history sheet with the number of transactions.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "feedbackTitle": "Rate the app",
+  "@feedbackTitle": {
+    "description": "Title of the feedback dialog (a star follows it)."
+  },
+  "feedbackHint": "Share your thoughts or suggestions...",
+  "@feedbackHint": {
+    "description": "Hint of the feedback comment field."
+  },
+  "feedbackSubmit": "Send now",
+  "@feedbackSubmit": {
+    "description": "Button that sends the feedback."
+  },
+  "feedbackThanks": "Thank you for your feedback!",
+  "@feedbackThanks": {
+    "description": "Snackbar after the feedback is sent."
+  },
+  "feedbackFailed": "Could not send your feedback, please try again later.",
+  "@feedbackFailed": {
+    "description": "Snackbar when the feedback could not be sent."
+  },
+  "aboutDescription": "A smart personal finance app with AI spending analysis.",
+  "@aboutDescription": {
+    "description": "Text of the about dialog."
+  },
+  "appearanceLanguageTitle": "Appearance and language",
+  "@appearanceLanguageTitle": {
+    "description": "Title of the appearance and language screen."
+  },
+  "themeCardSystem": "System",
+  "@themeCardSystem": {
+    "description": "Label of the system theme preview card."
+  },
+  "languageConfirmTitle": "Switch to {language}?",
+  "@languageConfirmTitle": {
+    "description": "Title of the sheet confirming a language change.",
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "languageConfirmMessage": "All text in the app will switch to this language.",
+  "@languageConfirmMessage": {
+    "description": "Message of the language change sheet."
+  },
+  "languageConfirmAction": "Switch",
+  "@languageConfirmAction": {
+    "description": "Confirm button of the language change sheet."
+  },
+  "notificationSettingsPushDescription": "Get notifications on this phone",
+  "@notificationSettingsPushDescription": {
+    "description": "Description of the push notification switch."
+  },
+  "notificationSettingsBudgetAlertDescription": "Alerts at 80% of a budget and when it is exceeded",
+  "@notificationSettingsBudgetAlertDescription": {
+    "description": "Description of the budget alert switch."
+  },
+  "moneySourcesTotal": "Total",
+  "@moneySourcesTotal": {
+    "description": "Last row of the money sources sheet."
+  },
+  "securityChangePasswordDescription": "Other devices will have to sign in again",
+  "@securityChangePasswordDescription": {
+    "description": "Description of the change password row in the security sheet."
+  },
+  "guideHomeTitle": "Home",
+  "@guideHomeTitle": {
+    "description": "Guide step title."
+  },
+  "guideHomeBody": "See your balance, this month's income and spending, your budget and recent transactions.",
+  "@guideHomeBody": {
+    "description": "Guide step text."
+  },
+  "guideStatsTitle": "Statistics",
+  "@guideStatsTitle": {
+    "description": "Guide step title."
+  },
+  "guideStatsBody": "See spending as a chart, a month calendar or by category; filter and export to Excel.",
+  "@guideStatsBody": {
+    "description": "Guide step text."
+  },
+  "guideScanTitle": "Scan receipts",
+  "@guideScanTitle": {
+    "description": "Guide step title."
+  },
+  "guideScanBody": "Tap the round button in the middle of the bottom bar and take or pick a photo. The AI reads the store, the date and the total for you to check and save.",
+  "@guideScanBody": {
+    "description": "Guide step text."
+  },
+  "guideAnalysisTitle": "Spending analysis",
+  "@guideAnalysisTitle": {
+    "description": "Guide step title."
+  },
+  "guideAnalysisBody": "See what you can spend each day, highlights, spending habits and balance tips.",
+  "@guideAnalysisBody": {
+    "description": "Guide step text."
+  },
+  "guideBudgetSavingsTitle": "Budgets and savings",
+  "@guideBudgetSavingsTitle": {
+    "description": "Guide step title."
+  },
+  "guideBudgetSavingsBody": "Set spending limits per category and follow your savings goals.",
+  "@guideBudgetSavingsBody": {
+    "description": "Guide step text."
+  },
+  "feedbackChipEasy": "Easy to use",
+  "@feedbackChipEasy": {
+    "description": "Feedback suggestion chip."
+  },
+  "feedbackChipScan": "Accurate receipt scanning",
+  "@feedbackChipScan": {
+    "description": "Feedback suggestion chip."
+  },
+  "feedbackChipLooks": "Nice design",
+  "@feedbackChipLooks": {
+    "description": "Feedback suggestion chip."
+  },
+  "feedbackChipMore": "Needs more features",
+  "@feedbackChipMore": {
+    "description": "Feedback suggestion chip."
+  },
+  "feedbackStarLabel": "{count} of 5 stars",
+  "@feedbackStarLabel": {
+    "description": "Tooltip of a rating star.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aboutVersion": "Version",
+  "@aboutVersion": {
+    "description": "About sheet row."
+  },
+  "aboutDeveloper": "Developed by",
+  "@aboutDeveloper": {
+    "description": "About sheet row."
+  },
+  "aboutDeveloperValue": "Team 7",
+  "@aboutDeveloperValue": {
+    "description": "About sheet value."
+  },
+  "aboutSchool": "School",
+  "@aboutSchool": {
+    "description": "About sheet row."
+  },
+  "aboutSchoolValue": "HUIT",
+  "@aboutSchoolValue": {
+    "description": "About sheet value."
+  },
+  "aboutLicenses": "Open source licenses",
+  "@aboutLicenses": {
+    "description": "About sheet row opening the licence page."
+  },
+  "savingsTitle": "Savings",
+  "@savingsTitle": {
+    "description": "Title of the savings screen and its profile row."
+  },
+  "savingsDeleteFailed": "Could not delete the goal. {reason}",
+  "@savingsDeleteFailed": {
+    "description": "Snackbar when a goal cannot be deleted; reason is the error text.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsDeleted": "Goal deleted: {title}",
+  "@savingsDeleted": {
+    "description": "Snackbar after a goal is deleted.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsDeletedRefunded": "Goal deleted: {title}. {amount} went back to your wallet.",
+  "@savingsDeletedRefunded": {
+    "description": "Snackbar after a goal holding money is deleted; amount is what was refunded to the wallet.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsDeleteTitle": "Delete goal",
+  "@savingsDeleteTitle": {
+    "description": "Title of the dialog that confirms deleting a savings goal."
+  },
+  "savingsDeleteConfirm": "Delete this goal?",
+  "@savingsDeleteConfirm": {
+    "description": "Message of the delete goal dialog when nothing has been contributed yet."
+  },
+  "savingsDeleteConfirmRefund": "Delete this goal? The {amount} contributed will be refunded to your wallet.",
+  "@savingsDeleteConfirmRefund": {
+    "description": "Message of the delete goal dialog when the goal holds money; amount is what goes back to the wallet.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsGoalName": "Goal name",
+  "@savingsGoalName": {
+    "description": "Field of the add goal dialog."
+  },
+  "ledgerSavingsManagedByGoal": "Savings contributions are managed on the Savings page.",
+  "@ledgerSavingsManagedByGoal": {
+    "description": "Shown in the detail sheet of a savings contribution, which cannot be edited (nor deleted while the user has savings goals)."
+  },
+  "savingsTotalSaved": "Total saved",
+  "@savingsTotalSaved": {
+    "description": "Label of the savings summary card."
+  },
+  "savingsGoalCount": "{count, plural, =1{1 goal} other{{count} goals}}",
+  "@savingsGoalCount": {
+    "description": "Number of savings goals.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "savingsTarget": "Target: {amount}",
+  "@savingsTarget": {
+    "description": "Total target of the savings summary card.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "commonSessionExpiredTitle": "Session expired",
+  "@commonSessionExpiredTitle": {
+    "description": "Title of the dialog shown when a form is used without a signed-in user."
+  },
+  "commonInvalidAmountTitle": "Invalid amount",
+  "@commonInvalidAmountTitle": {
+    "description": "Title of the dialog shown when the typed amount is not a positive number."
+  },
+  "currencySymbol": "đ",
+  "@currencySymbol": {
+    "description": "The VND symbol shown after an amount field; the unit stays VND in every language."
+  },
+  "transactionSaveFailed": "Couldn't save the transaction. Please try again.",
+  "@transactionSaveFailed": {
+    "description": "A transaction could not be saved for an unexpected reason."
+  },
+  "transactionNotSentTitle": "Not sent to the server yet",
+  "@transactionNotSentTitle": {
+    "description": "Title when a new transaction was kept on the device but has not reached the server."
+  },
+  "transactionNotSentMessage": "The transaction is saved on this device but hasn't reached the server yet. When you're back online, open Statistics, select the transaction and tap \"Resend\". Resending won't create a duplicate.",
+  "@transactionNotSentMessage": {
+    "description": "Explains how to resend a transaction kept on the device."
+  },
+  "transactionCategoryLabel": "Category",
+  "@transactionCategoryLabel": {
+    "description": "Label of the category field or column."
+  },
+  "transactionDateLabel": "Transaction date",
+  "@transactionDateLabel": {
+    "description": "Label of the transaction date field."
+  },
+  "transactionNoteOptional": "Note (optional)",
+  "@transactionNoteOptional": {
+    "description": "Label of the optional note field."
+  },
+  "transactionPickExpenseCategory": "Choose an expense category",
+  "@transactionPickExpenseCategory": {
+    "description": "Title of the expense category picker."
+  },
+  "transactionPickIncomeCategory": "Choose an income category",
+  "@transactionPickIncomeCategory": {
+    "description": "Title of the income category picker."
+  },
+  "transactionExpenseMoney": "Expense",
+  "@transactionExpenseMoney": {
+    "description": "Money going out: the type toggle of the add form and the Excel column."
+  },
+  "transactionIncomeMoney": "Income",
+  "@transactionIncomeMoney": {
+    "description": "Money coming in: the type toggle of the add form and the Excel column."
+  },
+  "transactionExpenseKind": "Expense",
+  "@transactionExpenseKind": {
+    "description": "The kind of an existing transaction that spends money."
+  },
+  "transactionIncomeKind": "Income",
+  "@transactionIncomeKind": {
+    "description": "The kind of an existing transaction that brings money in."
+  },
+  "addTransactionTitle": "Add transaction",
+  "@addTransactionTitle": {
+    "description": "Title of the add transaction form."
+  },
+  "addTransactionAmountLabel": "Amount",
+  "@addTransactionAmountLabel": {
+    "description": "Label of the amount field of the add form."
+  },
+  "addTransactionNoteHint": "e.g. Coffee at Highlands",
+  "@addTransactionNoteHint": {
+    "description": "Example note in the add form."
+  },
+  "addTransactionSaved": "New transaction added.",
+  "@addTransactionSaved": {
+    "description": "The server saved the new transaction."
+  },
+  "categoryMoreTile": "More",
+  "@categoryMoreTile": {
+    "description": "Last category tile of a transaction form: opens the full category list."
+  },
+  "transactionTabExpense": "Expense",
+  "@transactionTabExpense": {
+    "description": "Tab of the add-transaction form for spending."
+  },
+  "transactionTabIncome": "Income",
+  "@transactionTabIncome": {
+    "description": "Tab of the add-transaction form for income."
+  },
+  "addTransactionManualTab": "Manual",
+  "@addTransactionManualTab": {
+    "description": "Tab of the add-transaction form: type the transaction in."
+  },
+  "addTransactionScanTab": "Scan receipt",
+  "@addTransactionScanTab": {
+    "description": "Tab of the add-transaction form: opens the receipt scanner."
+  },
+  "addTransactionSubmitExpense": "Add expense",
+  "@addTransactionSubmitExpense": {
+    "description": "Button that saves a new spending."
+  },
+  "addTransactionSubmitIncome": "Add income",
+  "@addTransactionSubmitIncome": {
+    "description": "Button that saves a new income."
+  },
+  "addTransactionDiscardTitle": "Discard this transaction?",
+  "@addTransactionDiscardTitle": {
+    "description": "Asked before the scanner replaces a form with typed data."
+  },
+  "addTransactionDiscardMessage": "The amount and note you typed will not be saved.",
+  "@addTransactionDiscardMessage": {
+    "description": "Body of the discard question."
+  },
+  "addTransactionDiscardConfirm": "Discard and scan",
+  "@addTransactionDiscardConfirm": {
+    "description": "Confirms leaving the form for the scanner."
+  },
+  "editTransactionSummaryLine": "{kind}, {time}",
+  "@editTransactionSummaryLine": {
+    "description": "Footer of the edit form's summary card: the type and the moment of the transaction.",
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "editTransactionTitle": "Edit transaction",
+  "@editTransactionTitle": {
+    "description": "Title of the edit form and the Ledger button that opens it."
+  },
+  "editTransactionNoServerIdTitle": "Can't edit this transaction",
+  "@editTransactionNoServerIdTitle": {
+    "description": "Title when the transaction has no server id."
+  },
+  "editTransactionNoServerIdMessage": "This transaction doesn't have a server ID yet.",
+  "@editTransactionNoServerIdMessage": {
+    "description": "The transaction has no server id, so it cannot be edited."
+  },
+  "editTransactionSaveFailedTitle": "Couldn't save the transaction",
+  "@editTransactionSaveFailedTitle": {
+    "description": "Title when the server did not save the edit."
+  },
+  "editTransactionRejected": "The server couldn't process the request. Please try again later.",
+  "@editTransactionRejected": {
+    "description": "A 4xx answer without a message from the server."
+  },
+  "editTransactionSavedTitle": "Changes saved",
+  "@editTransactionSavedTitle": {
+    "description": "Title when the edit was saved."
+  },
+  "editTransactionSavedMessage": "The transaction has been updated.",
+  "@editTransactionSavedMessage": {
+    "description": "The edit was saved."
+  },
+  "editTransactionCategoriesUnavailable": "Couldn't load the category list. You can still edit the amount and note.",
+  "@editTransactionCategoriesUnavailable": {
+    "description": "The category list could not be loaded."
+  },
+  "ledgerTitle": "Statistics",
+  "@ledgerTitle": {
+    "description": "Title of the Ledger page."
+  },
+  "ledgerSearchHint": "Search name, category...",
+  "@ledgerSearchHint": {
+    "description": "Hint of the Ledger search box."
+  },
+  "ledgerLegendIncome": "Income",
+  "@ledgerLegendIncome": {
+    "description": "Chart legend for income bars."
+  },
+  "ledgerLegendExpense": "Expense",
+  "@ledgerLegendExpense": {
+    "description": "Chart legend for expense bars."
+  },
+  "ledgerChartMonth": "{month, select, 1{Jan} 2{Feb} 3{Mar} 4{Apr} 5{May} 6{Jun} 7{Jul} 8{Aug} 9{Sep} 10{Oct} 11{Nov} 12{Dec} other{{month}}}",
+  "@ledgerChartMonth": {
+    "description": "Short month label under a chart bar; month is the month number 1-12.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerEmptyPeriod": "No transactions in this period.",
+  "@ledgerEmptyPeriod": {
+    "description": "The period has no transactions."
+  },
+  "ledgerBalance": "Balance",
+  "@ledgerBalance": {
+    "description": "Summary row and Excel row: income minus spending."
+  },
+  "ledgerDetailUnsyncedHint": "The server hasn't confirmed this transaction yet. When you're back online, tap \"Resend\". Resending won't create a duplicate.",
+  "@ledgerDetailUnsyncedHint": {
+    "description": "Explains the Resend button."
+  },
+  "ledgerResend": "Resend",
+  "@ledgerResend": {
+    "description": "Button that sends an unsynced transaction again."
+  },
+  "ledgerDeleteTitle": "Delete transaction?",
+  "@ledgerDeleteTitle": {
+    "description": "Title of the delete confirmation."
+  },
+  "ledgerDeleteMessage": "The amount will go back to your wallet and this can't be undone. Are you sure?",
+  "@ledgerDeleteMessage": {
+    "description": "Delete confirmation text."
+  },
+  "ledgerDeleteNow": "Delete now",
+  "@ledgerDeleteNow": {
+    "description": "Confirm button of a delete dialog."
+  },
+  "ledgerDeleted": "Transaction deleted and amount refunded",
+  "@ledgerDeleted": {
+    "description": "Snack bar after a delete."
+  },
+  "ledgerDeleteFailed": "Couldn't delete. Please try again",
+  "@ledgerDeleteFailed": {
+    "description": "Snack bar when a delete failed."
+  },
+  "ledgerResendFailedTitle": "Resend failed",
+  "@ledgerResendFailedTitle": {
+    "description": "Title when the server refused a resend."
+  },
+  "ledgerResendFailedMessage": "Couldn't resend the transaction. Please try again.",
+  "@ledgerResendFailedMessage": {
+    "description": "A resend failed for an unexpected reason."
+  },
+  "ledgerResent": "Transaction sent to the server",
+  "@ledgerResent": {
+    "description": "Snack bar after a successful resend."
+  },
+  "ledgerStillNotSentTitle": "Still not sent",
+  "@ledgerStillNotSentTitle": {
+    "description": "Title when a resend did not reach the server."
+  },
+  "ledgerStillNotSentMessage": "Can't reach the server. The transaction stays on this device and you can resend it later.",
+  "@ledgerStillNotSentMessage": {
+    "description": "A resend did not reach the server."
+  },
+  "ledgerDeleteUnsyncedTitle": "Delete unsent transaction?",
+  "@ledgerDeleteUnsyncedTitle": {
+    "description": "Title of the local delete confirmation."
+  },
+  "ledgerDeleteUnsyncedMessage": "The server hasn't confirmed this transaction. Remove it from this device and stop sending it? This can't be undone.",
+  "@ledgerDeleteUnsyncedMessage": {
+    "description": "Local delete confirmation text."
+  },
+  "ledgerDeletedUnsynced": "Unsent transaction deleted",
+  "@ledgerDeletedUnsynced": {
+    "description": "Snack bar after a local delete."
+  },
+  "ledgerDeleteWhileSending": "This transaction is being sent. Try again in a moment.",
+  "@ledgerDeleteWhileSending": {
+    "description": "Toast when the user deletes an unsent transaction that started being sent meanwhile."
+  },
+  "ledgerLoadFailedNotice": "Couldn't load the list from the server. Only the unsent transactions on this device are shown. Pull down to try again.",
+  "@ledgerLoadFailedNotice": {
+    "description": "Notice above the list when the server list failed."
+  },
+  "ledgerExcelSheet": "Spending {month}",
+  "@ledgerExcelSheet": {
+    "description": "Excel sheet name (at most 31 characters) and share subject; month is numeric, e.g. '10-2026'.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerExcelDate": "Date",
+  "@ledgerExcelDate": {
+    "description": "Excel column: date."
+  },
+  "ledgerExcelTotal": "Total",
+  "@ledgerExcelTotal": {
+    "description": "Excel row: totals."
+  },
+  "ledgerExcelBudgetHeader": "BUDGETS {month}",
+  "@ledgerExcelBudgetHeader": {
+    "description": "Excel heading of the budget table; month is numeric, e.g. '10-2026'.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerExcelLimit": "Limit",
+  "@ledgerExcelLimit": {
+    "description": "Excel column: budget limit."
+  },
+  "ledgerExcelSpent": "Spent",
+  "@ledgerExcelSpent": {
+    "description": "Excel column: amount spent."
+  },
+  "ledgerExcelRemaining": "Remaining",
+  "@ledgerExcelRemaining": {
+    "description": "Excel column: amount left."
+  },
+  "ledgerExcelNotCounted": "Not counted",
+  "@ledgerExcelNotCounted": {
+    "description": "Excel column: amount of a refund or wallet transfer, which is neither income nor spending."
+  },
+  "ledgerExcelFileName": "Spending{name}_{month}",
+  "@ledgerExcelFileName": {
+    "description": "Excel file name without extension, letters, digits, '_' and '-' only; name is '_' plus the user's name without diacritics or spaces, or empty when unknown, e.g. '_JohnDoe'; month is numeric, e.g. '10-2026'.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerExcelShareText": "Spending report for {month}",
+  "@ledgerExcelShareText": {
+    "description": "Text sent with the shared Excel file; month is numeric, e.g. '10-2026'.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerExcelFailed": "Couldn't export the Excel file. Please try again.",
+  "@ledgerExcelFailed": {
+    "description": "Toast when the Excel report could not be created, saved or shared."
+  },
+  "reviewTitle": "Confirm receipt",
+  "@reviewTitle": {
+    "description": "Title of the receipt review form."
+  },
+  "reviewNoTotal": "Donut couldn't read the total from the photo. Please enter it manually.",
+  "@reviewNoTotal": {
+    "description": "The scan found no total."
+  },
+  "reviewScanFailed": "Receipt scan failed (check the AI service). Please enter the details manually.",
+  "@reviewScanFailed": {
+    "description": "The scan request failed."
+  },
+  "reviewPhotoUploadFailedTitle": "Couldn't upload the receipt photo",
+  "@reviewPhotoUploadFailedTitle": {
+    "description": "Title when the photo upload failed."
+  },
+  "reviewPhotoUploadFailedMessage": "The receipt photo hasn't been uploaded to the server. Save the transaction without the photo?",
+  "@reviewPhotoUploadFailedMessage": {
+    "description": "Asks whether to save without the photo."
+  },
+  "reviewPhotoUploadFailedToast": "Couldn't upload the photo: {reason}",
+  "@reviewPhotoUploadFailedToast": {
+    "description": "Toast when the receipt photo could not be uploaded; reason is the user-facing text of the error.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewPhotoRejected": "The photo is too large or not an image the server accepts.",
+  "@reviewPhotoRejected": {
+    "description": "Reason in the upload toast when the server refused the photo without saying why (400, 413)."
+  },
+  "reviewSaveWithoutPhoto": "Save without photo",
+  "@reviewSaveWithoutPhoto": {
+    "description": "Confirm button: save without the photo."
+  },
+  "reviewLater": "Later",
+  "@reviewLater": {
+    "description": "Cancel button: do not save now."
+  },
+  "reviewSaved": "Transaction saved from the receipt.",
+  "@reviewSaved": {
+    "description": "The server saved the receipt transaction."
+  },
+  "reviewStepPhoto": "Photo",
+  "@reviewStepPhoto": {
+    "description": "Done step of the receipt review band."
+  },
+  "reviewStepCheck": "Check",
+  "@reviewStepCheck": {
+    "description": "Current step of the receipt review band."
+  },
+  "reviewStepSave": "Save",
+  "@reviewStepSave": {
+    "description": "Last step of the receipt review band."
+  },
+  "reviewZoom": "Zoom",
+  "@reviewZoom": {
+    "description": "Pill on the receipt photo that opens the viewer."
+  },
+  "reviewCompare": "Compare",
+  "@reviewCompare": {
+    "description": "Pill in the review band: photo and fields side by side."
+  },
+  "reviewNeedsCheck": "Check this",
+  "@reviewNeedsCheck": {
+    "description": "Marks a field the AI is not sure about."
+  },
+  "reviewStoreHint": "Store name may be wrong, please correct it.",
+  "@reviewStoreHint": {
+    "description": "Hint under an unsure store name."
+  },
+  "reviewTotalHint": "Total may be wrong, compare it with the photo.",
+  "@reviewTotalHint": {
+    "description": "Hint under an unsure total."
+  },
+  "reviewDateHint": "Could not read the date; pick it if it was not today.",
+  "@reviewDateHint": {
+    "description": "Hint under a date the AI could not read."
+  },
+  "reviewTotal": "Total",
+  "@reviewTotal": {
+    "description": "Label of the receipt total field."
+  },
+  "reviewDateDoubtHint": "Date may be wrong, compare it with the photo.",
+  "@reviewDateDoubtHint": {
+    "description": "Hint under a date the AI read but doubts."
+  },
+  "reviewSaveAndScan": "Save & scan next",
+  "@reviewSaveAndScan": {
+    "description": "Secondary button: saves and goes on scanning."
+  },
+  "reviewSave": "Save",
+  "@reviewSave": {
+    "description": "Main button of the receipt review form."
+  },
+  "reviewAnalyzing": "Analyzing the receipt...",
+  "@reviewAnalyzing": {
+    "description": "Shown while the scan runs."
+  },
+  "reviewPleaseWait": "This will only take a moment",
+  "@reviewPleaseWait": {
+    "description": "Shown while the scan runs."
+  },
+  "reviewStoreName": "Store name",
+  "@reviewStoreName": {
+    "description": "Label of the store name field."
+  },
+  "reviewAddress": "Address",
+  "@reviewAddress": {
+    "description": "Label of the optional store address field of the review form."
+  },
+  "reviewAddressHint": "Address may be wrong, please correct it.",
+  "@reviewAddressHint": {
+    "description": "Hint under an unsure store address."
+  },
+  "paymentHistoryTitle": "Deposit/withdrawal history",
+  "@paymentHistoryTitle": {
+    "description": "Title of the payment history page."
+  },
+  "paymentHistoryLoadFailed": "Couldn't load the history. {reason}",
+  "@paymentHistoryLoadFailed": {
+    "description": "The history could not be loaded; reason is a user-facing error text.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentHistoryEmpty": "No deposits or withdrawals yet.",
+  "@paymentHistoryEmpty": {
+    "description": "The history is empty."
+  },
+  "paymentCancelled": "Order {code} cancelled",
+  "@paymentCancelled": {
+    "description": "Snack bar after cancelling an order.",
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentCancelFailed": "Couldn't cancel the order. {reason}",
+  "@paymentCancelFailed": {
+    "description": "Cancelling failed; reason is a user-facing error text.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentDeposit": "Deposit",
+  "@paymentDeposit": {
+    "description": "Order type: deposit."
+  },
+  "paymentWithdrawal": "Withdrawal",
+  "@paymentWithdrawal": {
+    "description": "Order type: withdrawal."
+  },
+  "paymentCancelOrder": "Cancel order",
+  "@paymentCancelOrder": {
+    "description": "Button that cancels a pending order."
+  },
+  "paymentStatusSuccess": "Successful",
+  "@paymentStatusSuccess": {
+    "description": "Order status SUCCESS."
+  },
+  "paymentStatusFailed": "Failed",
+  "@paymentStatusFailed": {
+    "description": "Order status FAILED."
+  },
+  "paymentStatusCancelled": "Cancelled",
+  "@paymentStatusCancelled": {
+    "description": "Order status CANCELLED."
+  },
+  "paymentStatusPending": "Pending",
+  "@paymentStatusPending": {
+    "description": "Order status PENDING."
+  },
+  "linkedCreateOrderFailed": "Couldn't create the sync order. {reason}",
+  "@linkedCreateOrderFailed": {
+    "description": "Creating the order failed; reason is a user-facing error text.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "linkedPollTimedOut": "No payment result yet. Please check again in the sync history.",
+  "@linkedPollTimedOut": {
+    "description": "The payment status did not change in time."
+  },
+  "linkedOpenPayUrlFailed": "Couldn't open the payment page. Please try again.",
+  "@linkedOpenPayUrlFailed": {
+    "description": "The payment page of a new sync order could not be opened, so nothing is waited for."
+  },
+  "linkedDemoWallet": "Demo wallet",
+  "@linkedDemoWallet": {
+    "description": "Name of the demo e-wallet."
+  },
+  "linkedSync": "Sync",
+  "@linkedSync": {
+    "description": "Button that syncs money from a wallet."
+  },
+  "linkedSynced": "Synced {amount} to your spending budget.",
+  "@linkedSynced": {
+    "description": "The payment succeeded.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "linkedSyncOutcome": "Sync: {status}",
+  "@linkedSyncOutcome": {
+    "description": "The payment ended without success; status is a translated order status.",
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "linkedHistoryTooltip": "Sync history",
+  "@linkedHistoryTooltip": {
+    "description": "Tooltip of the history button."
+  },
+  "linkedWalletsDescription": "Sync money from a wallet into your budget to manage spending.",
+  "@linkedWalletsDescription": {
+    "description": "Explains the wallet list."
+  },
+  "linkedLinked": "Linked",
+  "@linkedLinked": {
+    "description": "Status of a linked wallet."
+  },
+  "linkedSyncingFrom": "Syncing {amount} from {wallet}… finish the payment on the gateway.",
+  "@linkedSyncingFrom": {
+    "description": "Banner while a sync waits for the payment gateway.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "linkedSheetTitle": "Sync money",
+  "@linkedSheetTitle": {
+    "description": "Title of the amount sheet of a wallet sync."
+  },
+  "linkedSheetFrom": "From {wallet}",
+  "@linkedSheetFrom": {
+    "description": "Wallet card of the amount sheet.",
+    "placeholders": {
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "linkedSheetTarget": "Into your spending budget",
+  "@linkedSheetTarget": {
+    "description": "Second line of the wallet card of the amount sheet."
+  },
+  "linkedAmountLabel": "Amount to add",
+  "@linkedAmountLabel": {
+    "description": "Label of the amount field of a wallet sync."
+  },
+  "linkedMinAmountHint": "Minimum {amount}. You will be taken to the {wallet} gateway to pay.",
+  "@linkedMinAmountHint": {
+    "description": "Line under the quick amounts of a wallet sync.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "wallet": {
+        "type": "String"
+      }
+    }
+  },
+  "linkedMaxAmountHint": "At most {amount} per sync.",
+  "@linkedMaxAmountHint": {
+    "description": "Error line under the amount of a wallet sync while the amount is above the limit of one payment order.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "linkedContinuePayment": "Continue to payment",
+  "@linkedContinuePayment": {
+    "description": "Button of the amount sheet."
+  },
+  "paymentOrderDetails": "Order details",
+  "@paymentOrderDetails": {
+    "description": "Title of the order details sheet."
+  },
+  "paymentDetailWallet": "Wallet",
+  "@paymentDetailWallet": {
+    "description": "Wallet row of the order details sheet."
+  },
+  "paymentDetailCode": "Order code",
+  "@paymentDetailCode": {
+    "description": "Order code row of the order details sheet."
+  },
+  "paymentDetailTime": "Time",
+  "@paymentDetailTime": {
+    "description": "Time row of the order details sheet."
+  },
+  "commonDelete": "Delete",
+  "@commonDelete": {
+    "description": "Button that deletes an item."
+  },
+  "commonApply": "Apply",
+  "@commonApply": {
+    "description": "Button that applies a choice (e.g. a date range)."
+  },
+  "periodThisWeek": "This week",
+  "@periodThisWeek": {
+    "description": "The current calendar week."
+  },
+  "periodThisMonth": "This month",
+  "@periodThisMonth": {
+    "description": "The current calendar month."
+  },
+  "periodCustom": "Custom",
+  "@periodCustom": {
+    "description": "A range of days the user picks."
+  },
+  "budgetTitle": "Budgets",
+  "@budgetTitle": {
+    "description": "Title of the budget screen and of the budget block."
+  },
+  "budgetAlertWarningTitle": "Budget almost used up",
+  "@budgetAlertWarningTitle": {
+    "description": "Title of the 80% budget alert."
+  },
+  "budgetAlertExceededTitle": "Budget exceeded",
+  "@budgetAlertExceededTitle": {
+    "description": "Title of the 100% budget alert."
+  },
+  "budgetAlertExceededLine": "• {name} (per {period}): over the limit — {amounts} ({percent}%)",
+  "@budgetAlertExceededLine": {
+    "description": "One exceeded budget in the alert; period is the lowercase period name, amounts is \"spent / limit\".",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      },
+      "amounts": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetAlertWarningLine": "• {name} (per {period}): {percent}% of the limit used — {amounts}",
+  "@budgetAlertWarningLine": {
+    "description": "One budget at 80% or more in the alert; period is the lowercase period name, amounts is \"spent / limit\".",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      },
+      "amounts": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetLoadFailedTitle": "Couldn't load your budgets",
+  "@budgetLoadFailedTitle": {
+    "description": "Error title when the budget list fails to load."
+  },
+  "budgetDeleteTitle": "Delete budget?",
+  "@budgetDeleteTitle": {
+    "description": "Title of the delete confirmation."
+  },
+  "budgetDeleteMessage": "The budget \"{name}\" will be deleted.",
+  "@budgetDeleteMessage": {
+    "description": "Delete confirmation; name is the category label.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetDeleteFailedTitle": "Couldn't delete the budget",
+  "@budgetDeleteFailedTitle": {
+    "description": "Error title when a delete fails."
+  },
+  "budgetDeleted": "Budget deleted",
+  "@budgetDeleted": {
+    "description": "Shown after a delete."
+  },
+  "budgetEmptyHint": "Set a weekly or monthly spending limit to stay in control.",
+  "@budgetEmptyHint": {
+    "description": "Hint under the empty budget list."
+  },
+  "budgetCreate": "Set up a budget",
+  "@budgetCreate": {
+    "description": "Button and form title for a new budget."
+  },
+  "budgetEditTitle": "Edit budget",
+  "@budgetEditTitle": {
+    "description": "Form title for an existing budget."
+  },
+  "budgetAmountLabel": "Budget amount (₫)",
+  "@budgetAmountLabel": {
+    "description": "Label of the amount field."
+  },
+  "budgetPeriodLabel": "Period",
+  "@budgetPeriodLabel": {
+    "description": "Label of the week/month choice."
+  },
+  "budgetAppliedPeriod": "Applied period",
+  "@budgetAppliedPeriod": {
+    "description": "The dates an edited budget keeps."
+  },
+  "budgetSave": "Save budget",
+  "@budgetSave": {
+    "description": "Submit button of the budget form."
+  },
+  "budgetSaveFailedTitle": "Couldn't save the budget",
+  "@budgetSaveFailedTitle": {
+    "description": "Error title when saving fails."
+  },
+  "budgetSavedTitle": "Budget saved",
+  "@budgetSavedTitle": {
+    "description": "Shown after a save."
+  },
+  "budgetSavedMessage": "Your spending limit has been updated.",
+  "@budgetSavedMessage": {
+    "description": "Shown after a save."
+  },
+  "budgetCategoriesLoadFailedTitle": "Couldn't load the categories",
+  "@budgetCategoriesLoadFailedTitle": {
+    "description": "The category list of the form failed to load."
+  },
+  "budgetCategoriesLoadFailedMessage": "You can still choose \"{allLabel}\" or try again later.",
+  "@budgetCategoriesLoadFailedMessage": {
+    "description": "allLabel is the \"all categories\" option.",
+    "placeholders": {
+      "allLabel": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardGreeting": "Hello,",
+  "@dashboardGreeting": {
+    "description": "Greeting above the user name."
+  },
+  "dashboardBalance": "Balance",
+  "@dashboardBalance": {
+    "description": "Label of the balance on the home band."
+  },
+  "dashboardPendingNotInBalance": "Excludes {amount} from transactions waiting to be sent",
+  "@dashboardPendingNotInBalance": {
+    "description": "Note under the balance: the signed total of the transactions still waiting to be sent, which the balance does not include.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardMonthIncome": "In {amount}",
+  "@dashboardMonthIncome": {
+    "description": "Pill on the home band: the income of this month, in compact form.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardMonthExpense": "Out {amount}",
+  "@dashboardMonthExpense": {
+    "description": "Pill on the home band: the spending of this month, in compact form.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardShowAmounts": "Show amounts",
+  "@dashboardShowAmounts": {
+    "description": "Tooltip of the eye button while the amounts are hidden."
+  },
+  "dashboardHideAmounts": "Hide amounts",
+  "@dashboardHideAmounts": {
+    "description": "Tooltip of the eye button while the amounts are shown."
+  },
+  "dashboardSavingsShort": "Savings",
+  "@dashboardSavingsShort": {
+    "description": "Label of the savings shortcut on the home band."
+  },
+  "homeBudgetLeft": "{amount} left for {days, plural, =1{1 day} other{{days} days}}",
+  "@homeBudgetLeft": {
+    "description": "Main line of the home budget band: what is left of the budget total and how many days its period still has, today included.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "homeBudgetOver": "Over by {amount}",
+  "@homeBudgetOver": {
+    "description": "Main line of the home budget band once the total is exceeded.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeBudgetCategoryOver": "{category} is over by {amount}",
+  "@homeBudgetCategoryOver": {
+    "description": "Second line of the home budget band: the category budget exceeded the most.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "homeBudgetCategoryNear": "{category} has used {percent}%",
+  "@homeBudgetCategoryNear": {
+    "description": "Second line of the home budget band: the category budget closest to its limit, past 80%.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeBudgetView": "View",
+  "@homeBudgetView": {
+    "description": "Button of the home budget band that opens the budget screen."
+  },
+  "homeBudgetEmptyTitle": "Set this month's budget",
+  "@homeBudgetEmptyTitle": {
+    "description": "Home budget band when no budget runs today."
+  },
+  "homeBudgetEmptyHint": "See how much is left for each day",
+  "@homeBudgetEmptyHint": {
+    "description": "Second line of the home budget band when no budget runs today."
+  },
+  "homeBudgetSet": "Set",
+  "@homeBudgetSet": {
+    "description": "Button of the home budget band that opens the budget screen to set a budget."
+  },
+  "homeBudgetFailed": "Couldn't load budgets",
+  "@homeBudgetFailed": {
+    "description": "Home budget band when the budgets could not be loaded."
+  },
+  "dashboardRecent": "Recent",
+  "@dashboardRecent": {
+    "description": "Title of the recent transactions card on the home screen."
+  },
+  "dashboardSeeAll": "See all",
+  "@dashboardSeeAll": {
+    "description": "Link next to the recent transactions title: opens the statistics tab."
+  },
+  "dashboardLoadFailedTitle": "Couldn't load the home screen",
+  "@dashboardLoadFailedTitle": {
+    "description": "Error state of the home screen when its first load failed."
+  },
+  "dashboardLoadFailedMessage": "Check the connection and try again.",
+  "@dashboardLoadFailedMessage": {
+    "description": "Under the error title of the home screen."
+  },
+  "dashboardNoTransactions": "No transactions yet.",
+  "@dashboardNoTransactions": {
+    "description": "The recent transaction list is empty."
+  },
+  "moneySourcesSubtitle": "Wallets linked to your account",
+  "@moneySourcesSubtitle": {
+    "description": "Under the money sources title."
+  },
+  "allFeaturesTitle": "All features",
+  "@allFeaturesTitle": {
+    "description": "Title of the feature sheet."
+  },
+  "featureSavingsDescription": "Manage savings goals",
+  "@featureSavingsDescription": {
+    "description": "Under the savings feature."
+  },
+  "featureMoneySourcesDescription": "See wallets and balances",
+  "@featureMoneySourcesDescription": {
+    "description": "Under the money sources feature."
+  },
+  "featureLinkedServicesDescription": "MoMo, ZaloPay, banks...",
+  "@featureLinkedServicesDescription": {
+    "description": "Under the linked services feature."
+  },
+  "aiTodayLabel": "You can spend today",
+  "@aiTodayLabel": {
+    "description": "AI tab band: label above today's allowance."
+  },
+  "aiTodayDaysLeft": "{days, plural, =1{last day} other{{days} days left}}",
+  "@aiTodayDaysLeft": {
+    "description": "AI tab band: days left in the month, today included.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "aiTodaySpent": "Spent {amount}",
+  "@aiTodaySpent": {
+    "description": "AI tab band: spent today; amount is formatted money.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTodayLeft": "{amount} left today",
+  "@aiTodayLeft": {
+    "description": "AI tab band: what is left of today's allowance.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTodayOver": "{amount} over today",
+  "@aiTodayOver": {
+    "description": "AI tab band: spent past today's allowance.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHighlightsTitle": "Highlights",
+  "@aiHighlightsTitle": {
+    "description": "AI tab section title."
+  },
+  "aiTrendVsLastMonth": "Compared with the same days last month",
+  "@aiTrendVsLastMonth": {
+    "description": "Highlights: second line of the spending trend row."
+  },
+  "aiTopCategoryLine": "{category}, {amount}",
+  "@aiTopCategoryLine": {
+    "description": "Highlights: top category and what was spent on it.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "aiTipSurplus": "Money left this month: set a goal",
+  "@aiTipSurplus": {
+    "description": "Highlights: saving tip when money is left and there is no goal."
+  },
+  "aiTipNeedMore": "Still to put into your goal this month",
+  "@aiTipNeedMore": {
+    "description": "Highlights: saving tip when the month does not cover the goal; the pill shows the amount."
+  },
+  "aiTipOnTrack": "On track for your goal",
+  "@aiTipOnTrack": {
+    "description": "Highlights: saving tip when the month covers the goal."
+  },
+  "aiTipOverspent": "Goal covered, but this month is spending more than came in",
+  "@aiTipOverspent": {
+    "description": "Highlights: saving tip when contributions cover the goal but the month spent more than its income."
+  },
+  "aiWeekCompareLine": "{thisWeek} / last week {lastWeek}",
+  "@aiWeekCompareLine": {
+    "description": "Highlights: this week so far against the same days of last week; compact money.",
+    "placeholders": {
+      "thisWeek": {
+        "type": "String"
+      },
+      "lastWeek": {
+        "type": "String"
+      }
+    }
+  },
+  "aiWeekCompareNone": "No spending in these two weeks",
+  "@aiWeekCompareNone": {
+    "description": "Highlights: week comparison without spending."
+  },
+  "aiTopWeekTitle": "Top spending week",
+  "@aiTopWeekTitle": {
+    "description": "Highlights: title of the top week row."
+  },
+  "aiTopWeekLine": "Week {week} of this month",
+  "@aiTopWeekLine": {
+    "description": "Highlights: week is 1-4.",
+    "placeholders": {
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "aiDailyChartTitle": "Daily spending",
+  "@aiDailyChartTitle": {
+    "description": "AI tab section title above the area chart."
+  },
+  "aiPickRangeStart": "From",
+  "@aiPickRangeStart": {
+    "description": "Title of the date sheet for the first day of a custom range."
+  },
+  "aiPickRangeEnd": "To",
+  "@aiPickRangeEnd": {
+    "description": "Title of the date sheet for the last day of a custom range."
+  },
+  "aiHabitsTitle": "Spending habits",
+  "@aiHabitsTitle": {
+    "description": "AI tab section title."
+  },
+  "aiHabitRepeat": "{weeks, plural, =1{Seen in the last week} other{Repeated over the last {weeks} weeks}}",
+  "@aiHabitRepeat": {
+    "description": "Habits: weeks with spending that the analysis looked at.",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "aiTimes": "{count, plural, =1{once} other{{count} times}}",
+  "@aiTimes": {
+    "description": "Habits: how many weeks a sequence came back in.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHabitEvery": "About every {days} days",
+  "@aiHabitEvery": {
+    "description": "Habits: mean gap of a periodic expense; days is a formatted decimal.",
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHabitLastOn": "Last on {date}",
+  "@aiHabitLastOn": {
+    "description": "Habits: pill of a periodic expense whose expected date is past; date is dd/MM.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHabitUpcoming": "Coming up: after {from} you usually spend on {to}.",
+  "@aiHabitUpcoming": {
+    "description": "Habits: prediction when this week already has the first categories.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHabitUsually": "After {from} you usually spend on {to}.",
+  "@aiHabitUsually": {
+    "description": "Habits: a habit that is not under way this week.",
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "aiBalanceTitle": "Spending balance",
+  "@aiBalanceTitle": {
+    "description": "AI tab section title (50/30/20)."
+  },
+  "aiBalanceLine": "{percent}% of income, about {target}% advised",
+  "@aiBalanceLine": {
+    "description": "Balance: share of the month's income and its target.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "aiBalanceSavings": "Savings",
+  "@aiBalanceSavings": {
+    "description": "Balance: the saved share."
+  },
+  "aiLevelOk": "On track",
+  "@aiLevelOk": {
+    "description": "Pill: the share is where it should be."
+  },
+  "aiLevelHigh": "A bit high",
+  "@aiLevelHigh": {
+    "description": "Pill: the share is above its target."
+  },
+  "aiLevelLow": "A bit low",
+  "@aiLevelLow": {
+    "description": "Pill: the share is below its target."
+  },
+  "aiAdviceLine": "{category}: {current} → {suggested} / month",
+  "@aiAdviceLine": {
+    "description": "Advice box: one recommendation of the budget advisor; formatted money.",
+    "placeholders": {
+      "category": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      },
+      "suggested": {
+        "type": "String"
+      }
+    }
+  },
+  "aiNoDataMessage": "Add transactions to see your spending analysis.",
+  "@aiNoDataMessage": {
+    "description": "AI tab without any transaction."
+  },
+  "aiErrorNetwork": "Can't reach the analysis server. Please check your connection and try again.",
+  "@aiErrorNetwork": {
+    "description": "The AI service did not answer."
+  },
+  "aiErrorServer": "The analysis server ran into a problem. Please try again later.",
+  "@aiErrorServer": {
+    "description": "The AI service answered 5xx."
+  },
+  "aiErrorRejected": "The analysis server couldn't process the request. Please try again later.",
+  "@aiErrorRejected": {
+    "description": "The AI service answered 4xx."
+  },
+  "aiAnalyzeFailedTitle": "Couldn't analyse your spending habits",
+  "@aiAnalyzeFailedTitle": {
+    "description": "Error title of a failed analysis."
+  },
+  "aiNoData": "No data yet",
+  "@aiNoData": {
+    "description": "The user has no transactions."
+  },
+  "aiTrendTitle": "Spending trend",
+  "@aiTrendTitle": {
+    "description": "Insight card title."
+  },
+  "aiTopCategoryTitle": "Top spending",
+  "@aiTopCategoryTitle": {
+    "description": "Insight card title."
+  },
+  "aiSavingTipTitle": "Saving tip",
+  "@aiSavingTipTitle": {
+    "description": "Insight card title."
+  },
+  "aiWeekCompareTitle": "Week comparison",
+  "@aiWeekCompareTitle": {
+    "description": "Insight card title."
+  },
+  "aiSafeToSpendNoIncome": "Add this month's income to work out a safe amount.",
+  "@aiSafeToSpendNoIncome": {
+    "description": "No income this month."
+  },
+  "aiOverSafe": "You've spent past this month's safe share.",
+  "@aiOverSafe": {
+    "description": "The safe amount is below zero."
+  },
+  "aiSpentThisMonth": "You've spent {amount} this month.",
+  "@aiSpentThisMonth": {
+    "description": "No spending last month to compare with.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "aiNoSpendingThisMonth": "No spending this month yet.",
+  "@aiNoSpendingThisMonth": {
+    "description": "Top category card without spending."
+  },
+  "aiAddGoal": "Add a savings goal for the AI to analyse.",
+  "@aiAddGoal": {
+    "description": "No savings goal yet."
+  },
+  "aiGoalNoDeadline": "This goal has no deadline, contribute whenever you can",
+  "@aiGoalNoDeadline": {
+    "description": "Savings tip: the urgent goal has no deadline, so no monthly need."
+  },
+  "aiGoalOverdue": "This goal is past its deadline: set a new date or keep contributing",
+  "@aiGoalOverdue": {
+    "description": "Savings tip: the urgent goal has a deadline that is already past."
+  },
+  "aiLoadFailedTitle": "Couldn't load your data",
+  "@aiLoadFailedTitle": {
+    "description": "AI tab: title of the error state when the first load of the transactions failed and there is nothing to show."
+  },
+  "aiLoadFailedNotice": "Couldn't refresh your data. You are seeing what was loaded earlier.",
+  "@aiLoadFailedNotice": {
+    "description": "AI tab: notice above the cards when a refresh failed; the data shown is the one loaded before. Followed by a retry button."
+  },
+  "aiSpadeLoadFailedTitle": "Couldn't load the analysis",
+  "@aiSpadeLoadFailedTitle": {
+    "description": "The last analysis failed."
+  },
+  "aiSpadeLoadFailedMessage": "Check your connection, then refresh to try again.",
+  "@aiSpadeLoadFailedMessage": {
+    "description": "The last analysis failed."
+  },
+  "aiSpadeNotEnoughTitle": "Not enough data",
+  "@aiSpadeNotEnoughTitle": {
+    "description": "No pattern found."
+  },
+  "aiSpadeNotEnoughWeeks": "Only {weeks} weeks with spending so far; at least {minWeeks} weeks are needed to look for sequences.",
+  "@aiSpadeNotEnoughWeeks": {
+    "description": "Not enough weeks of spending for the sequence mining.",
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      },
+      "minWeeks": {
+        "type": "int"
+      }
+    }
+  },
+  "aiSpadeNotEnoughUnknown": "Not enough spending history to look for sequences.",
+  "@aiSpadeNotEnoughUnknown": {
+    "description": "Not enough history and the server did not say how much is needed."
+  },
+  "aiSpadeNotEnoughNone": "No spending in the last 26 weeks yet.",
+  "@aiSpadeNotEnoughNone": {
+    "description": "No spending to analyse."
+  },
+  "aiSpadeNoPatternTitle": "No sequence yet",
+  "@aiSpadeNoPatternTitle": {
+    "description": "Enough weeks, but no sequence repeats often enough."
+  },
+  "aiSpadeNoPatternMessage": "No sequence of spending repeats in enough weeks yet.",
+  "@aiSpadeNoPatternMessage": {
+    "description": "Enough weeks, but no sequence repeats often enough."
+  },
+  "ai503020Needs": "Needs",
+  "@ai503020Needs": {
+    "description": "Needs share row."
+  },
+  "ai503020Wants": "Wants",
+  "@ai503020Wants": {
+    "description": "Wants share row."
+  },
+  "ai503020OnTrack": "This month's spending meets the 50/30/20 rule. Keep it up!",
+  "@ai503020OnTrack": {
+    "description": "Advice when every share is on target."
+  },
+  "ai503020NeedsHigh": "Needs take {percent}% of your income (target ≤50%). Check Living costs/Supermarket for anything you can trim.",
+  "@ai503020NeedsHigh": {
+    "description": "percent is a whole number.",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "ai503020WantsHigh": "Wants (Entertainment, Other) take {percent}% of your income (target ≤30%) — the easiest place to cut.",
+  "@ai503020WantsHigh": {
+    "description": "percent is a whole number.",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "ai503020SavingsLow": "You've saved only {percent}% of your income (target ≥20%). Raise it a little each month.",
+  "@ai503020SavingsLow": {
+    "description": "percent is a whole number.",
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "dateFieldToday": "Today",
+  "@dateFieldToday": {
+    "description": "Chip of the shared date field that picks today."
+  },
+  "dateFieldYesterday": "Yesterday",
+  "@dateFieldYesterday": {
+    "description": "Chip of the shared date field that picks yesterday."
+  },
+  "dateFieldPick": "Choose a date",
+  "@dateFieldPick": {
+    "description": "Accessibility label of the shared date field, which opens the date picker."
+  },
+  "dashboardScanReceipt": "Scan receipt",
+  "@dashboardScanReceipt": {
+    "description": "Home screen shortcut that opens the receipt scan options (same sheet as the scan button)."
+  },
+  "reviewOpenImage": "Receipt photo",
+  "@reviewOpenImage": {
+    "description": "Accessibility label of the receipt thumbnail on the review form, and title of the full-screen photo viewer it opens."
+  },
+  "reviewCompareOn": "Compare with the photo",
+  "@reviewCompareOn": {
+    "description": "Tooltip of the review form button that shows the photo above the fields."
+  },
+  "reviewCompareOff": "Leave compare mode",
+  "@reviewCompareOff": {
+    "description": "Tooltip of the review form button that goes back to the normal layout."
+  },
+  "reviewOtherMonthBalanceNote": "A transaction dated {day} still counts toward your current balance",
+  "@reviewOtherMonthBalanceNote": {
+    "description": "Note under the date of a receipt that is not from the current month; day is dd/MM.",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewDuplicateTitle": "This receipt seems to have been saved on {date}",
+  "@reviewDuplicateTitle": {
+    "description": "Title of the dialog shown when the server takes a scanned receipt for one already saved; date is dd/MM/yyyy HH:mm of the saved transaction.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "reviewDuplicateTitleNoDate": "This receipt seems to have been saved before",
+  "@reviewDuplicateTitleNoDate": {
+    "description": "Title of the duplicate receipt dialog when the server sent no date."
+  },
+  "reviewDuplicateMessage": "Open the saved one to check it, or save anyway if this is another purchase.",
+  "@reviewDuplicateMessage": {
+    "description": "Body of the duplicate receipt dialog."
+  },
+  "reviewDuplicateView": "View saved one",
+  "@reviewDuplicateView": {
+    "description": "Duplicate receipt dialog button that opens the transaction already saved."
+  },
+  "reviewDuplicateSaveAnyway": "Save anyway",
+  "@reviewDuplicateSaveAnyway": {
+    "description": "Duplicate receipt dialog button that saves the receipt again."
+  },
+  "reviewDuplicateCannotOpen": "The saved one can't be opened from here. You can find it in the Statistics tab.",
+  "@reviewDuplicateCannotOpen": {
+    "description": "Toast when the review form has no way to open the saved transaction."
+  },
+  "linkedDemoBadge": "Demo",
+  "@linkedDemoBadge": {
+    "description": "Badge on the linked services page and its profile row: the wallets are simulated."
+  },
+  "linkedDemoNotice": "This is a demo: the wallets and synced payments are simulated, with no real bank or e-wallet connection.",
+  "@linkedDemoNotice": {
+    "description": "Notice at the top of the linked services page."
+  },
+  "budgetPeriodYear": "Year",
+  "@budgetPeriodYear": {
+    "description": "Yearly budget period; also the year mode of the Ledger."
+  },
+  "periodThisYear": "This year",
+  "@periodThisYear": {
+    "description": "The current calendar year."
+  },
+  "budgetCustomCategoryLabel": "Category name",
+  "@budgetCustomCategoryLabel": {
+    "description": "Field shown when the budget category is 'Other'."
+  },
+  "budgetCustomCategoryHelper": "A new category is created if needed. Use this exact name in your transactions so they count",
+  "@budgetCustomCategoryHelper": {
+    "description": "Helper under the custom category name field."
+  },
+  "budgetCustomCategoryRequired": "Enter the category name",
+  "@budgetCustomCategoryRequired": {
+    "description": "Error when the custom category name is empty."
+  },
+  "budgetCustomCategoryTooLong": "At most {max} characters",
+  "@budgetCustomCategoryTooLong": {
+    "description": "Error when the custom category name is too long.",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "budgetGroupOver": "Over budget",
+  "@budgetGroupOver": {
+    "description": "Header of the budget group whose limit is passed."
+  },
+  "budgetGroupWithin": "On track",
+  "@budgetGroupWithin": {
+    "description": "Header of the budget group still within the limit."
+  },
+  "budgetGroupCount": "{count, plural, =1{1 budget} other{{count} budgets}}",
+  "@budgetGroupCount": {
+    "description": "How many budgets a group holds, at the end of its header.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "budgetLeft": "{amount} left",
+  "@budgetLeft": {
+    "description": "What is left of a budget, compact amount.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetOver": "{amount} over",
+  "@budgetOver": {
+    "description": "How much a budget is exceeded by, compact amount.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetAmounts": "{spent} / {limit}",
+  "@budgetAmounts": {
+    "description": "Spent and limit of a budget, compact amounts.",
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "budgetEmptyPeriod": "No budget for this period",
+  "@budgetEmptyPeriod": {
+    "description": "Title of the budget screen when the selected tab has no running budget."
+  },
+  "ledgerYearLabel": "Year {year}",
+  "@ledgerYearLabel": {
+    "description": "Period label of the Ledger in year mode.",
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "categorySavings": "Savings",
+  "@categorySavings": {
+    "description": "Default expense category 'savings': money moved into a savings goal."
+  },
+  "savingsTargetDateClear": "Remove the target date",
+  "@savingsTargetDateClear": {
+    "description": "Tooltip of the button that removes the target date."
+  },
+  "savingsContribute": "Add money",
+  "@savingsContribute": {
+    "description": "Button of a goal that moves money from the wallet into it."
+  },
+  "savingsContributeFailed": "Could not add the money. {reason}",
+  "@savingsContributeFailed": {
+    "description": "Toast when a contribution fails; reason is the error text.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsContributeRejected": "Check the amount and your wallet balance.",
+  "@savingsContributeRejected": {
+    "description": "Reason shown when the server refuses a contribution and its message cannot be shown."
+  },
+  "savingsContributed": "Money added to \"{title}\"",
+  "@savingsContributed": {
+    "description": "Toast after a contribution.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsGoalReached": "Congratulations! You reached your goal \"{title}\"",
+  "@savingsGoalReached": {
+    "description": "Toast when a contribution completes the goal.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "scanQueueAdded": "{count, plural, =1{1 receipt added to the queue} other{{count} receipts added to the queue}}",
+  "@scanQueueAdded": {
+    "description": "Toast after receipts were queued for reading.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanQueueOverLimit": "{count, plural, =1{1 receipt added to the queue} other{{count} receipts added to the queue}} ({skipped} skipped, over {limit})",
+  "@scanQueueOverLimit": {
+    "description": "Toast after queueing when some images were left out because the queue holds at most limit receipts.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      },
+      "limit": {
+        "type": "int"
+      }
+    }
+  },
+  "scanQueueReading": "Reading receipt {current}/{total}",
+  "@scanQueueReading": {
+    "description": "Banner above the tab bar while the queue reads receipts.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "scanQueueReady": "{count, plural, =1{1 receipt to confirm} other{{count} receipts to confirm}}",
+  "@scanQueueReady": {
+    "description": "Banner above the tab bar when read receipts wait for a confirmation.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanQueueFailed": "{count, plural, =1{1 receipt could not be read} other{{count} receipts could not be read}}",
+  "@scanQueueFailed": {
+    "description": "Banner above the tab bar when only failed receipts are left in the queue.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scanQueueStorageFailed": "Couldn't update the receipt queue on this device. Please try again.",
+  "@scanQueueStorageFailed": {
+    "description": "Toast when the scan queue could not be read or written on the device."
+  },
+  "pendingReceiptsTitle": "Receipts to confirm",
+  "@pendingReceiptsTitle": {
+    "description": "Title of the screen listing the queued receipts."
+  },
+  "pendingReceiptsEmpty": "No receipts waiting.",
+  "@pendingReceiptsEmpty": {
+    "description": "Shown when the scan queue is empty."
+  },
+  "pendingStatusQueued": "Waiting",
+  "@pendingStatusQueued": {
+    "description": "Status chip: the receipt waits to be read."
+  },
+  "pendingStatusReading": "Reading",
+  "@pendingStatusReading": {
+    "description": "Status chip: the receipt is being read."
+  },
+  "pendingStatusFailed": "Failed",
+  "@pendingStatusFailed": {
+    "description": "Status chip: the receipt could not be read."
+  },
+  "pendingRetry": "Read again",
+  "@pendingRetry": {
+    "description": "Button that queues a failed receipt again."
+  },
+  "pendingDiscard": "Discard",
+  "@pendingDiscard": {
+    "description": "Button that removes a receipt from the queue."
+  },
+  "pendingDiscardConfirm": "Remove this receipt from the list?",
+  "@pendingDiscardConfirm": {
+    "description": "Question before a receipt is removed from the queue."
+  },
+  "pendingConfirmAllAsk": "{count, plural, =1{Save 1 valid receipt as a transaction?} other{Save {count} valid receipts as transactions?}}",
+  "@pendingConfirmAllAsk": {
+    "description": "Question before the valid receipts are saved.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingConfirmAllResult": "Saved {saved}, duplicates {duplicates}, not saved {notSaved}",
+  "@pendingConfirmAllResult": {
+    "description": "Toast after confirming all valid receipts.",
+    "placeholders": {
+      "saved": {
+        "type": "int"
+      },
+      "duplicates": {
+        "type": "int"
+      },
+      "notSaved": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingErrorNetwork": "Couldn't reach the AI service.",
+  "@pendingErrorNetwork": {
+    "description": "Why a receipt failed: no network or timeout."
+  },
+  "pendingErrorServer": "The AI service couldn't read this receipt.",
+  "@pendingErrorServer": {
+    "description": "Why a receipt failed: the AI service answered with an error."
+  },
+  "pendingErrorMissingImage": "The photo is no longer on this device.",
+  "@pendingErrorMissingImage": {
+    "description": "Why a receipt failed: the image copy is gone."
+  },
+  "pendingGroupReady": "Ready {count}",
+  "@pendingGroupReady": {
+    "description": "Group / tab title of the ready receipts.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingGroupProcessing": "Processing {count}",
+  "@pendingGroupProcessing": {
+    "description": "Group title of the receipts not ready yet.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingTabReading": "Reading {count}",
+  "@pendingTabReading": {
+    "description": "Tab of the receipts waiting or being read.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingTabFailed": "Failed {count}",
+  "@pendingTabFailed": {
+    "description": "Tab of the receipts whose reading failed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingReadingTitle": "Reading…",
+  "@pendingReadingTitle": {
+    "description": "Title of a card whose receipt is not read yet."
+  },
+  "pendingPhotoTitle": "Photo {index}",
+  "@pendingPhotoTitle": {
+    "description": "Title of a failed receipt: its place in the list.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingQuickSave": "Save",
+  "@pendingQuickSave": {
+    "description": "Quick button of a ready receipt."
+  },
+  "pendingReview": "Check",
+  "@pendingReview": {
+    "description": "Quick button of a ready receipt with a doubted field."
+  },
+  "pendingReadyFooter": "{count} receipts ready",
+  "@pendingReadyFooter": {
+    "description": "Line above the bottom button: receipts that can be saved now.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingSelected": "{count} selected",
+  "@pendingSelected": {
+    "description": "Band title in the selection mode.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingSelectAll": "Select all",
+  "@pendingSelectAll": {
+    "description": "Selects every receipt that can be saved now."
+  },
+  "pendingSaveSelected": "Save {count} selected",
+  "@pendingSaveSelected": {
+    "description": "Bottom button in the selection mode.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingConfirmAllShort": "Confirm all",
+  "@pendingConfirmAllShort": {
+    "description": "Bottom button: saves every receipt that can be saved now."
+  },
+  "toastStackCount": "{count, plural, =1{1 notification · tap to see} other{{count} notifications · tap to see}}",
+  "@toastStackCount": {
+    "description": "Label under a stack of toasts: how many there are and that a tap opens the list.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "toastCollapse": "Collapse",
+  "@toastCollapse": {
+    "description": "Button under the open list of toasts that folds it back into a stack."
+  },
+  "toastCloseAll": "Close all",
+  "@toastCloseAll": {
+    "description": "Button under the open list of toasts that closes every toast."
+  },
+  "toastDismiss": "Dismiss",
+  "@toastDismiss": {
+    "description": "Tooltip of the cross that closes one toast in the open list."
+  },
+  "toastJustNow": "just now",
+  "@toastJustNow": {
+    "description": "Age of a toast shown less than five seconds ago."
+  },
+  "toastSecondsAgo": "{count}s ago",
+  "@toastSecondsAgo": {
+    "description": "Age of a toast in seconds.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "toastMinutesAgo": "{count} min ago",
+  "@toastMinutesAgo": {
+    "description": "Age of a toast in minutes.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "receiptViewerTitle": "Receipt photo",
+  "@receiptViewerTitle": {
+    "description": "Title of the full-screen receipt photo viewer."
+  },
+  "receiptViewerShare": "Share",
+  "@receiptViewerShare": {
+    "description": "Tooltip of the share button of the receipt photo viewer (the system sheet also offers saving to Photos)."
+  },
+  "receiptViewerShareFailed": "Could not share the photo",
+  "@receiptViewerShareFailed": {
+    "description": "Toast when the receipt photo could not be downloaded or shared."
+  },
+  "datePickerTransactionTitle": "Choose the transaction date",
+  "@datePickerTransactionTitle": {
+    "description": "Title of the date picker sheet opened from a transaction form."
+  },
+  "datePickerTitle": "Choose a date",
+  "@datePickerTitle": {
+    "description": "Title of the date picker sheet opened from any other form."
+  },
+  "datePickerLastRecorded": "Last used",
+  "@datePickerLastRecorded": {
+    "description": "Quick choice of the date picker: the day of the transaction recorded last."
+  },
+  "datePickerMonthTitle": "{monthName} {year}",
+  "@datePickerMonthTitle": {
+    "description": "Month shown above the calendar of the date picker sheet.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      },
+      "monthName": {
+        "type": "String"
+      }
+    }
+  },
+  "datePickerWeekdays": "Mo,Tu,We,Th,Fr,Sa,Su",
+  "@datePickerWeekdays": {
+    "description": "Short weekday names, Monday first, separated by commas, above the calendar."
+  },
+  "datePickerPreviousMonth": "Previous month",
+  "@datePickerPreviousMonth": {
+    "description": "Tooltip of the button that shows the previous month."
+  },
+  "datePickerNextMonth": "Next month",
+  "@datePickerNextMonth": {
+    "description": "Tooltip of the button that shows the next month."
+  },
+  "dateFieldTodayValue": "Today, {date}",
+  "@dateFieldTodayValue": {
+    "description": "What a date field shows when its day is today.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "dateFieldYesterdayValue": "Yesterday, {date}",
+  "@dateFieldYesterdayValue": {
+    "description": "What a date field shows when its day is yesterday.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "filterTitle": "Filter",
+  "@filterTitle": {
+    "description": "Title of the filter sheet of the statistics tab."
+  },
+  "filterAll": "All",
+  "@filterAll": {
+    "description": "Filter: every direction of money."
+  },
+  "filterExpense": "Out",
+  "@filterExpense": {
+    "description": "Filter: spending only."
+  },
+  "filterIncome": "In",
+  "@filterIncome": {
+    "description": "Filter: income only."
+  },
+  "filterAnyAmount": "Any",
+  "@filterAnyAmount": {
+    "description": "Filter: any amount."
+  },
+  "filterUnder100k": "<100K",
+  "@filterUnder100k": {
+    "description": "Filter: amounts below 100,000."
+  },
+  "filter100kTo500k": "100–500K",
+  "@filter100kTo500k": {
+    "description": "Filter: amounts from 100,000 to 500,000."
+  },
+  "filterOver500k": ">500K",
+  "@filterOver500k": {
+    "description": "Filter: amounts above 500,000."
+  },
+  "filterNewest": "Newest",
+  "@filterNewest": {
+    "description": "Order: newest first."
+  },
+  "filterOldest": "Oldest",
+  "@filterOldest": {
+    "description": "Order: oldest first."
+  },
+  "filterLargest": "Largest",
+  "@filterLargest": {
+    "description": "Order: largest amount first."
+  },
+  "filterReset": "Reset",
+  "@filterReset": {
+    "description": "Puts the filter back to all / any / newest."
+  },
+  "filterShowCount": "Show {count, plural, =1{1 transaction} other{{count} transactions}}",
+  "@filterShowCount": {
+    "description": "Applies the filter; count is how many transactions it keeps.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "transactionDetailTitle": "Transaction details",
+  "@transactionDetailTitle": {
+    "description": "Title of the transaction detail page."
+  },
+  "transactionDetailCategory": "Category",
+  "@transactionDetailCategory": {
+    "description": "Row label on the transaction detail page."
+  },
+  "transactionDetailTime": "Time",
+  "@transactionDetailTime": {
+    "description": "Row label on the transaction detail page."
+  },
+  "transactionDetailReceipt": "Receipt",
+  "@transactionDetailReceipt": {
+    "description": "Row label on the transaction detail page: state of the scanned receipt."
+  },
+  "transactionDetailSync": "Sync",
+  "@transactionDetailSync": {
+    "description": "Row label on the transaction detail page: the send state of a transaction not confirmed by the server."
+  },
+  "transactionDetailReceiptImage": "Receipt photo",
+  "@transactionDetailReceiptImage": {
+    "description": "Title above the receipt photo on the transaction detail page."
+  },
+  "transactionDetailDelete": "Delete",
+  "@transactionDetailDelete": {
+    "description": "Delete button at the bottom of the transaction detail page."
+  },
+  "statsIncome": "In {amount}",
+  "@statsIncome": {
+    "description": "Income pill on the statistics band.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "statsExpense": "Out {amount}",
+  "@statsExpense": {
+    "description": "Spending pill on the statistics band.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "statsLeft": "Left {amount}",
+  "@statsLeft": {
+    "description": "Income minus spending of the period, on the statistics band.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "statsViewChart": "Chart",
+  "@statsViewChart": {
+    "description": "Statistics view toggle."
+  },
+  "statsViewCalendar": "Calendar",
+  "@statsViewCalendar": {
+    "description": "Statistics view toggle."
+  },
+  "statsViewCategories": "Categories",
+  "@statsViewCategories": {
+    "description": "Statistics view toggle."
+  },
+  "statsMonthLabel": "{month}/{year}",
+  "@statsMonthLabel": {
+    "description": "The month on the statistics band.",
+    "placeholders": {
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "statsSearch": "Search transactions",
+  "@statsSearch": {
+    "description": "Tooltip of the search button on the statistics band."
+  },
+  "statsExport": "Export to Excel",
+  "@statsExport": {
+    "description": "Tooltip of the Excel button on the statistics band."
+  },
+  "statsPickDate": "Pick a date",
+  "@statsPickDate": {
+    "description": "Title of the date sheet opened from the period label of the statistics band."
+  },
+  "statsAdd": "+ Add",
+  "@statsAdd": {
+    "description": "Adds a transaction, from the day list of the statistics calendar."
+  },
+  "statsTapBarHint": "Tap a bar to see the amounts",
+  "@statsTapBarHint": {
+    "description": "Hint above the statistics chart."
+  },
+  "statsSpent": "spent",
+  "@statsSpent": {
+    "description": "Under the total in the middle of the category ring."
+  },
+  "statsCategoryLine": "{percent}%, {count, plural, =1{1 time} other{{count} times}}",
+  "@statsCategoryLine": {
+    "description": "Share of spending and number of transactions of one category.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsByCategory": "By category",
+  "@statsByCategory": {
+    "description": "Title of the category list of the statistics tab."
+  },
+  "statsNoSpending": "No spending in this period",
+  "@statsNoSpending": {
+    "description": "Category view of a period without spending."
+  },
+  "statsTransactions": "Transactions",
+  "@statsTransactions": {
+    "description": "Title of the transaction list of the statistics tab."
+  },
+  "statsTransactionsOfDay": "Transactions on {date}",
+  "@statsTransactionsOfDay": {
+    "description": "Title of the day list of the statistics calendar.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "statsTotalIncome": "Total in {amount}",
+  "@statsTotalIncome": {
+    "description": "Income of the chosen day, statistics calendar.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "statsTotalExpense": "Total out {amount}",
+  "@statsTotalExpense": {
+    "description": "Spending of the chosen day, statistics calendar.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "statsNoMatch": "No transaction matches the filter",
+  "@statsNoMatch": {
+    "description": "Statistics list when the filter or the search hides every transaction of the period."
+  },
+  "statsCategoriesFilterHint": "Filter and search only narrow the transaction list of Chart and Calendar.",
+  "@statsCategoriesFilterHint": {
+    "description": "Under the Categories view of the statistics tab while a filter or a search is active: they do not change the category shares."
+  },
+  "savingsTabActive": "In progress",
+  "@savingsTabActive": {
+    "description": "Savings screen toggle: goals still being funded."
+  },
+  "savingsTabDone": "Done",
+  "@savingsTabDone": {
+    "description": "Savings screen toggle: reached goals."
+  },
+  "savingsMissing": "Still needed",
+  "@savingsMissing": {
+    "description": "Caption above the amount a savings goal still misses."
+  },
+  "savingsDaysLeft": "{days, plural, =1{1 day left} other{{days} days left}} · {date}",
+  "@savingsDaysLeft": {
+    "description": "Row of a savings goal: days to its target date, then the date.",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsDueToday": "Due today · {date}",
+  "@savingsDueToday": {
+    "description": "Row of a savings goal whose target date is today.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsOverdue": "Overdue · {date}",
+  "@savingsOverdue": {
+    "description": "Row of an unfinished savings goal whose target date is past.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsNoDeadline": "No target date",
+  "@savingsNoDeadline": {
+    "description": "Row of a savings goal without a target date."
+  },
+  "savingsReached": "Goal reached",
+  "@savingsReached": {
+    "description": "Row of a reached savings goal."
+  },
+  "savingsEmptyActiveTitle": "No goals in progress",
+  "@savingsEmptyActiveTitle": {
+    "description": "Empty state of the In progress tab."
+  },
+  "savingsEmptyActiveHint": "Tap + to create a savings goal.",
+  "@savingsEmptyActiveHint": {
+    "description": "Empty state of the In progress tab."
+  },
+  "savingsEmptyDoneTitle": "No goals reached yet",
+  "@savingsEmptyDoneTitle": {
+    "description": "Empty state of the Done tab."
+  },
+  "savingsEmptyDoneHint": "Goals you fully fund show up here.",
+  "@savingsEmptyDoneHint": {
+    "description": "Empty state of the Done tab."
+  },
+  "savingsLoadFailedTitle": "Could not load your savings",
+  "@savingsLoadFailedTitle": {
+    "description": "Title of the error state of the savings screen."
+  },
+  "savingsCreate": "Add goal",
+  "@savingsCreate": {
+    "description": "Title of the new goal form and tooltip of the + button."
+  },
+  "savingsEditGoal": "Edit goal",
+  "@savingsEditGoal": {
+    "description": "Title of the goal form when editing."
+  },
+  "savingsFormGoalCard": "Goal",
+  "@savingsFormGoalCard": {
+    "description": "Header of the first card of the goal form."
+  },
+  "savingsFormDeadlineCard": "Deadline",
+  "@savingsFormDeadlineCard": {
+    "description": "Header of the target date card of the goal form."
+  },
+  "savingsTargetAmountLabel": "Target amount",
+  "@savingsTargetAmountLabel": {
+    "description": "Label of the target amount field."
+  },
+  "savingsSavedLabel": "Saved",
+  "@savingsSavedLabel": {
+    "description": "Read-only saved amount in the goal form."
+  },
+  "savingsSavedHint": "Changes only through Add money.",
+  "@savingsSavedHint": {
+    "description": "Why the saved amount cannot be typed in the goal form."
+  },
+  "savingsDeadlineLabel": "Target date (optional)",
+  "@savingsDeadlineLabel": {
+    "description": "Label of the target date field."
+  },
+  "savingsDeadlinePick": "Pick a date",
+  "@savingsDeadlinePick": {
+    "description": "Target date field without a date."
+  },
+  "savingsSaveGoal": "Save goal",
+  "@savingsSaveGoal": {
+    "description": "Button of the goal form."
+  },
+  "savingsCreated": "Goal added: {title}",
+  "@savingsCreated": {
+    "description": "Toast after a goal is created.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsUpdated": "Goal saved: {title}",
+  "@savingsUpdated": {
+    "description": "Toast after a goal is edited.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsSaveFailedTitle": "Could not save the goal",
+  "@savingsSaveFailedTitle": {
+    "description": "Error dialog of the goal form."
+  },
+  "savingsContributeAmountLabel": "Amount",
+  "@savingsContributeAmountLabel": {
+    "description": "Label of the amount field of the Add money sheet."
+  },
+  "savingsContributeAddition": "{saved} + {added} =",
+  "@savingsContributeAddition": {
+    "description": "Head card of the Add money sheet: saved amount plus the amount typed.",
+    "placeholders": {
+      "saved": {
+        "type": "String"
+      },
+      "added": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsAmountsOf": "{saved} / {target}",
+  "@savingsAmountsOf": {
+    "description": "Saved amount over the target.",
+    "placeholders": {
+      "saved": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsSuggestedBadge": "Suggested",
+  "@savingsSuggestedBadge": {
+    "description": "Badge on the suggested quick amount."
+  },
+  "savingsSuggestionHint": "Suggestion: add {amount} a month to reach it by {date}.",
+  "@savingsSuggestionHint": {
+    "description": "Line under the quick amounts when the goal has a target date.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsWalletLine": "Taken from your wallet (balance {balance}) and recorded as a \"Savings\" expense.",
+  "@savingsWalletLine": {
+    "description": "Add money sheet: where the money comes from.",
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsWalletLineNoBalance": "Taken from your wallet and recorded as a \"Savings\" expense.",
+  "@savingsWalletLineNoBalance": {
+    "description": "Add money sheet when the balance could not be read."
+  },
+  "savingsContributeButton": "Add {amount}",
+  "@savingsContributeButton": {
+    "description": "Button of the Add money sheet with the amount.",
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsReloadFailed": "Could not reload your savings. {reason}",
+  "@savingsReloadFailed": {
+    "description": "Toast when a reload fails while goals are already shown; reason is the error text.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "savingsNoTarget": "No amount set",
+  "@savingsNoTarget": {
+    "description": "Row of a savings goal whose target is 0."
+  },
+  "savingsOverfillHint": "The goal only misses {missing}. The extra still goes into the goal.",
+  "@savingsOverfillHint": {
+    "description": "Add money sheet when the amount typed is above what the goal misses.",
+    "placeholders": {
+      "missing": {
+        "type": "String"
+      }
+    }
+  },
+  "receiptDetailTitle": "Receipt",
+  "@receiptDetailTitle": {
+    "description": "Title of the receipt detail sheet opened from the transaction detail page."
+  },
+  "receiptDetailStatus": "Status",
+  "@receiptDetailStatus": {
+    "description": "Row label in the receipt detail sheet: where the receipt stands."
+  },
+  "receiptDetailVendor": "Store",
+  "@receiptDetailVendor": {
+    "description": "Label of the store name in the receipt detail sheet and its edit form."
+  },
+  "receiptDetailTotal": "Total",
+  "@receiptDetailTotal": {
+    "description": "Label of the receipt total in the receipt detail sheet and its forms."
+  },
+  "receiptDetailDate": "Date",
+  "@receiptDetailDate": {
+    "description": "Label of the receipt date in the receipt detail sheet."
+  },
+  "receiptDetailNoValue": "Not available",
+  "@receiptDetailNoValue": {
+    "description": "Shown in place of a receipt field that has no value."
+  },
+  "receiptDetailStatusPending": "Waiting to be read",
+  "@receiptDetailStatusPending": {
+    "description": "Lifecycle status PENDING of a receipt."
+  },
+  "receiptDetailStatusProcessing": "Processing",
+  "@receiptDetailStatusProcessing": {
+    "description": "Lifecycle status PROCESSING of a receipt."
+  },
+  "receiptDetailStatusCompleted": "Read by AI",
+  "@receiptDetailStatusCompleted": {
+    "description": "Lifecycle status COMPLETED_RAW of a receipt: the AI read a total and nobody changed it."
+  },
+  "receiptDetailStatusEdited": "Edited by you",
+  "@receiptDetailStatusEdited": {
+    "description": "Lifecycle status EDITED of a receipt: its owner corrected what the AI read."
+  },
+  "receiptDetailStatusFailed": "Could not be read",
+  "@receiptDetailStatusFailed": {
+    "description": "Lifecycle status FAILED of a receipt."
+  },
+  "receiptDetailStatusWaitingForReview": "Waiting for review",
+  "@receiptDetailStatusWaitingForReview": {
+    "description": "Lifecycle status WAITING_FOR_REVIEW of a receipt: the owner sent the amount and waits for an administrator."
+  },
+  "receiptDetailStatusApproved": "Approved",
+  "@receiptDetailStatusApproved": {
+    "description": "Lifecycle status APPROVED of a receipt."
+  },
+  "receiptDetailStatusCanceled": "Canceled",
+  "@receiptDetailStatusCanceled": {
+    "description": "Lifecycle status CANCELED of a receipt."
+  },
+  "receiptDetailStatusUnknown": "Unknown",
+  "@receiptDetailStatusUnknown": {
+    "description": "Status of a receipt that this version of the app does not know."
+  },
+  "receiptDetailFailedTitle": "This receipt could not be read",
+  "@receiptDetailFailedTitle": {
+    "description": "Title of the error block of a FAILED receipt; the reason from the server is shown under it."
+  },
+  "receiptDetailEdit": "Edit details",
+  "@receiptDetailEdit": {
+    "description": "Button of the receipt detail sheet: correct the store, total and date."
+  },
+  "receiptDetailRetry": "Read again",
+  "@receiptDetailRetry": {
+    "description": "Button of the receipt detail sheet: scan the photo of a FAILED receipt again."
+  },
+  "receiptDetailSendAmount": "Send the right amount",
+  "@receiptDetailSendAmount": {
+    "description": "Button of the receipt detail sheet: tell an administrator the right total of a FAILED receipt."
+  },
+  "receiptDetailEditHint": "The transaction and your balance only change after an administrator approves.",
+  "@receiptDetailEditHint": {
+    "description": "Hint under the receipt edit form: editing a receipt does not change the transaction or the wallet."
+  },
+  "receiptDetailSendAmountHint": "Enter the right total of this receipt. An administrator will check it before the transaction is updated.",
+  "@receiptDetailSendAmountHint": {
+    "description": "Hint above the amount field of the send-the-right-amount form."
+  },
+  "receiptDetailSend": "Send",
+  "@receiptDetailSend": {
+    "description": "Button that sends the right amount of a FAILED receipt."
+  },
+  "receiptDetailEdited": "Receipt updated",
+  "@receiptDetailEdited": {
+    "description": "Toast after the receipt was edited."
+  },
+  "receiptDetailRetried": "Receipt read again",
+  "@receiptDetailRetried": {
+    "description": "Toast after a FAILED receipt was read again and a total was found."
+  },
+  "receiptDetailRetryStillFailed": "The total still could not be read",
+  "@receiptDetailRetryStillFailed": {
+    "description": "Toast after a FAILED receipt was read again and no total was found."
+  },
+  "receiptDetailAmountSent": "Sent to an administrator for review",
+  "@receiptDetailAmountSent": {
+    "description": "Toast after the right amount of a FAILED receipt was sent."
+  },
+  "receiptDetailLoadFailedTitle": "Could not load the receipt",
+  "@receiptDetailLoadFailedTitle": {
+    "description": "Title of the error view of the receipt detail sheet."
+  },
+  "receiptDetailConflict": "The receipt has changed. It was reloaded: please check it and try again.",
+  "@receiptDetailConflict": {
+    "description": "Toast when the server refuses an action on a receipt (409) and the message of the server cannot be shown in this language."
+  },
+  "receiptDetailPhotoFailed": "Could not download the receipt photo to read it again.",
+  "@receiptDetailPhotoFailed": {
+    "description": "Toast when the photo of a FAILED receipt cannot be downloaded for a new scan."
+  },
+  "experienceRatingLabel": "Experience rating (optional)",
+  "@experienceRatingLabel": {
+    "description": "Section title for the optional 0.5-5.0 star experience rating on transaction forms."
+  },
+  "experienceRatingClear": "Clear",
+  "@experienceRatingClear": {
+    "description": "Button to clear the selected star rating back to unrated."
+  },
+  "experienceRatingUnrated": "Tap or drag stars to rate (0.5 – 5.0)",
+  "@experienceRatingUnrated": {
+    "description": "Hint text shown when no star rating has been chosen yet."
+  },
+  "experienceRatingBad": "Poor experience",
+  "@experienceRatingBad": {
+    "description": "Sentiment label for a 0.5 to 1.5 star rating."
+  },
+  "experienceRatingFair": "Below average",
+  "@experienceRatingFair": {
+    "description": "Sentiment label for a 2.0 to 2.5 star rating."
+  },
+  "experienceRatingAverage": "Average",
+  "@experienceRatingAverage": {
+    "description": "Sentiment label for a 3.0 to 3.5 star rating."
+  },
+  "experienceRatingGood": "Good experience",
+  "@experienceRatingGood": {
+    "description": "Sentiment label for a 4.0 to 4.5 star rating."
+  },
+  "experienceRatingExcellent": "Excellent experience",
+  "@experienceRatingExcellent": {
+    "description": "Sentiment label for a 5.0 star rating."
+  },
+  "experienceReviewNoteLabel": "Experience review note (optional)",
+  "@experienceReviewNoteLabel": {
+    "description": "Floating label of the optional personal experience review note field."
+  },
+  "experienceReviewNoteHint": "e.g., Friendly staff, great drinks, cozy space...",
+  "@experienceReviewNoteHint": {
+    "description": "Placeholder text inside the optional personal experience review note field."
+  },
+  "transactionDetailExperience": "Experience rating",
+  "@transactionDetailExperience": {
+    "description": "Label of the experience rating row in TransactionDetailPage."
+  },
+  "transactionDetailReviewNote": "Experience note",
+  "@transactionDetailReviewNote": {
+    "description": "Label of the experience review note row in TransactionDetailPage."
+  },
+  "reviewPastStoreRating": "Past visits to {store}: avg {avg} ★ ({count} ratings)",
+  "@reviewPastStoreRating": {
+    "description": "Banner shown on the receipt review form when the store has previous rated transactions.",
+    "placeholders": {
+      "store": {
+        "type": "String"
+      },
+      "avg": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

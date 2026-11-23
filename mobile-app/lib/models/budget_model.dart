@@ -1,0 +1,224 @@
+import 'package:finance_ai_app/core/constants/transaction_categories.dart';
+import 'package:finance_ai_app/l10n/app_localizations.dart';
+
+/// Values of the backend's BudgetPeriodType (core-backend/.../Entity/BudgetPeriodType.java) and the date ranges the
+/// app derives from them. The backend accepts a range of at most 7 days for WEEK, 31 for MONTH and 366 for YEAR.
+class BudgetPeriodType {
+  static const String week = 'WEEK';
+  static const String month = 'MONTH';
+  static const String year = 'YEAR';
+  static const List<String> values = [week, month, year];
+
+  static String label(AppLocalizations loc, String periodType) =>
+      switch (periodType) {
+        week => loc.budgetPeriodWeek,
+        year => loc.budgetPeriodYear,
+        _ => loc.budgetPeriodMonth,
+      };
+
+  /// What the period that contains today is called: "this week", "this month" or "this year".
+  static String currentLabel(AppLocalizations loc, String periodType) =>
+      switch (periodType) {
+        week => loc.periodThisWeek,
+        year => loc.periodThisYear,
+        _ => loc.periodThisMonth,
+      };
+
+  /// The calendar week (Monday to Sunday), month or year that contains [day].
+  static ({DateTime start, DateTime end}) rangeContaining(
+    String periodType,
+    DateTime day,
+  ) {
+    if (periodType == week) {
+      final monday = DateTime(
+        day.year,
+        day.month,
+        day.day - (day.weekday - DateTime.monday),
+      );
+      return (
+        start: monday,
+        end: DateTime(monday.year, monday.month, monday.day + 6),
+      );
+    }
+    if (periodType == year) {
+      return (start: DateTime(day.year, 1, 1), end: DateTime(day.year, 12, 31));
+    }
+    return (
+      start: DateTime(day.year, day.month, 1),
+      end: DateTime(day.year, day.month + 1, 0),
+    );
+  }
+}
+
+/// A category a budget can be limited to.
+typedef BudgetCategory = ({int id, String name});
+
+/// A spending limit, as returned by GET /api/budgets. A null category means the limit covers every category.
+/// The local SQLite copy (offline mode) only knows months, see [fromMap] and [toMap].
+class BudgetModel {
+  /// What a budget without a category is called on screen.
+  static String allCategoriesLabel(AppLocalizations loc) =>
+      loc.budgetAllCategories;
+
+  /// The local `budgets` table has NOT NULL category columns, so "every category" is stored under this id there.
+  static const int allCategoriesLocalId = 0;
+
+  final int? id;
+  final int? categoryId;
+  final String? categoryName;
+  final double amount;
+  final String periodType;
+
+  /// Both dates are yyyy-MM-dd, exactly as the backend sends and expects them.
+  final String startDate;
+  final String endDate;
+
+  /// Only used by the local SQLite copy; the backend takes the owner from the login token.
+  final int? userId;
+
+  /// The category on screen: a default category in the language of [loc], a name the user made as it is, or
+  /// [allCategoriesLabel] when the budget covers every category.
+  String categoryLabel(AppLocalizations loc) {
+    final name = categoryName;
+    return name == null
+        ? allCategoriesLabel(loc)
+        : TransactionCategories.displayName(loc, name);
+  }
+
+  const BudgetModel({
+    this.id,
+    this.categoryId,
+    this.categoryName,
+    required this.amount,
+    required this.periodType,
+    required this.startDate,
+    required this.endDate,
+    this.userId,
+  });
+
+  /// A budget for the week, month or year of [periodType] that contains [day]; the dates are computed, never typed.
+  factory BudgetModel.forPeriod({
+    int? id,
+    int? categoryId,
+    String? categoryName,
+    required double amount,
+    required String periodType,
+    required DateTime day,
+    int? userId,
+  }) {
+    final range = BudgetPeriodType.rangeContaining(periodType, day);
+    return BudgetModel(
+      id: id,
+      categoryId: categoryId,
+      categoryName: categoryName,
+      amount: amount,
+      periodType: periodType,
+      startDate: formatApiDate(range.start),
+      endDate: formatApiDate(range.end),
+      userId: userId,
+    );
+  }
+
+  static String formatApiDate(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+  DateTime get start => DateTime.parse(startDate);
+
+  DateTime get end => DateTime.parse(endDate);
+
+  /// Whether [day] is inside the period of the budget; its first and its last day both count.
+  bool coversDay(DateTime day) {
+    final date = DateTime(day.year, day.month, day.day);
+    return !date.isBefore(start) && !date.isAfter(end);
+  }
+
+  /// Whether the period of the budget shares at least one day with [from]..[to], both days included.
+  bool overlaps(DateTime from, DateTime to) {
+    final first = DateTime(from.year, from.month, from.day);
+    final last = DateTime(to.year, to.month, to.day);
+    return !end.isBefore(first) && !start.isAfter(last);
+  }
+
+  factory BudgetModel.fromJson(Map<String, dynamic> json) {
+    return BudgetModel(
+      id: (json['id'] as num?)?.toInt(),
+      categoryId: (json['categoryId'] as num?)?.toInt(),
+      categoryName: json['categoryName'] as String?,
+      amount: (json['amount'] as num).toDouble(),
+      periodType: json['periodType'] as String,
+      startDate: json['startDate'] as String,
+      endDate: json['endDate'] as String,
+    );
+  }
+
+  /// The body of POST and PUT /api/budgets. It carries no user: the backend always uses the caller. Without a
+  /// category id, a [categoryName] is sent instead: the backend reuses the category of that name (ignoring case) or
+  /// creates it. Without either, the budget covers every category.
+  Map<String, dynamic> toJson() {
+    final name = categoryName;
+    return {
+      'categoryId': categoryId,
+      if (categoryId == null && name != null) 'categoryName': name,
+      'amount': amount,
+      'periodType': periodType,
+      'startDate': startDate,
+      'endDate': endDate,
+    };
+  }
+
+  /// A row of the local `budgets` table, which only stores monthly budgets.
+  factory BudgetModel.fromMap(Map<String, dynamic> map) {
+    final now = DateTime.now();
+    final localCategoryId = map['category_id'] as int? ?? allCategoriesLocalId;
+    final isAllCategories = localCategoryId == allCategoriesLocalId;
+    final month = DateTime(
+      map['year'] as int? ?? now.year,
+      map['month'] as int? ?? now.month,
+    );
+    return BudgetModel.forPeriod(
+      id: map['id'] as int?,
+      categoryId: isAllCategories ? null : localCategoryId,
+      categoryName: isAllCategories ? null : map['category_name'] as String?,
+      amount: (map['limit_amount'] as num?)?.toDouble() ?? 0.0,
+      periodType: BudgetPeriodType.month,
+      day: month,
+      userId: map['user_id'] as int?,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    final firstDay = start;
+    return {
+      if (id != null) 'id': id,
+      'category_id': categoryId ?? allCategoriesLocalId,
+      'category_name': categoryName ?? '',
+      'limit_amount': amount,
+      'month': firstDay.month,
+      'year': firstDay.year,
+      'user_id': userId,
+    };
+  }
+
+  BudgetModel copyWith({
+    int? id,
+    int? categoryId,
+    String? categoryName,
+    bool clearCategory = false,
+    double? amount,
+    String? periodType,
+    String? startDate,
+    String? endDate,
+    int? userId,
+  }) {
+    return BudgetModel(
+      id: id ?? this.id,
+      categoryId: clearCategory ? null : categoryId ?? this.categoryId,
+      categoryName: clearCategory ? null : categoryName ?? this.categoryName,
+      amount: amount ?? this.amount,
+      periodType: periodType ?? this.periodType,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      userId: userId ?? this.userId,
+    );
+  }
+}
