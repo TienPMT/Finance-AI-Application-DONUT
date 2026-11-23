@@ -1,0 +1,109 @@
+# Reverse proxy duy nhất được mở ra Internet (cổng 80/443). core-api và data-mining-api chỉ nằm trong finance-network.
+#
+# SITE_ADDRESS (đặt trong .env, xem docs/deploy/DEPLOY_GUIDE.md):
+#   - Server thật: tên miền, ví dụ api.example.com -> Caddy tự xin và tự gia hạn chứng chỉ HTTPS (Let's Encrypt).
+#     DNS của tên miền phải trỏ về IP của EC2 và cổng 80/443 phải mở trước khi khởi động.
+#   - Máy dev: để trống -> ":80", chỉ HTTP, không xin chứng chỉ.
+#
+# Đường dẫn:
+#   /ai/donut/*, /ai/spade/*             -> data-mining-api:8000 (bỏ tiền tố /ai; app mobile dùng ML_BASE=<gốc>/ai)
+#                                           CHỈ khi có access token hợp lệ: forward_auth hỏi core-api GET /api/auth/check
+#                                           (gửi kèm header Authorization: Bearer <access token>); 204 -> cho qua,
+#                                           401/403 của core-api được trả thẳng cho client.
+#   /ai/health                            -> data-mining-api:8000, công khai (không cần token)
+#   /ai/* còn lại (vd. /ai/admin/segment)  -> 404: chỉ core-api gọi được qua mạng nội bộ
+#   /actuator/* trừ /actuator/health        -> 404
+#   mọi đường dẫn khác                      -> core-api:8080 (REST API /api/..., trang admin)
+#
+# Header bảo mật cho mọi response; HSTS bị trình duyệt bỏ qua trên HTTP (máy dev). Không đặt CSP vì trang admin
+# dùng Tailwind CDN và script inline.
+# Giới hạn body: /ai/* 16MB (ai-service nhận ảnh tối đa 15MB + phần đầu multipart), còn lại 50MB (bằng
+# spring.servlet.multipart.max-request-size của core-api). Vượt giới hạn -> 413 ngay tại Caddy.
+# /admin/events (Server-Sent Events của trang quản trị) đi qua "handle" cuối cùng như mọi trang admin, không cần khối riêng:
+#   - reverse_proxy (Caddy 2.8) bỏ qua flush_interval và đẩy ngay từng lần ghi khi phản hồi có Content-Type text/event-stream;
+#   - encode gzip không giữ lại luồng SSE (miễn ngưỡng độ dài tối thiểu, header gửi ngay, thân được stream khi ghi);
+#   - reverse_proxy mặc định không đặt timeout đọc phản hồi; core-api gửi comment ping mỗi 25 s và đóng luồng sau 30 phút,
+#     EventSource của trình duyệt tự kết nối lại.
+#   Chỉ thêm "flush_interval -1" cho /admin/events nếu sau này đổi sang một phiên bản Caddy không còn hành vi trên.
+
+# Trang chủ tải app (index.html ở gốc repo) cho tên miền gốc, vd. example.com. LANDING_ADDRESS để trống (máy dev) ->
+# ":8081", cổng chỉ nằm trong container, không publish và không xin chứng chỉ.
+# Muốn có cả www: đặt LANDING_ADDRESS="example.com, www.example.com" (DNS của www phải trỏ về máy trước, nếu không
+# Caddy xin chứng chỉ thất bại cho www); khối @www chuyển www.example.com/... về https://example.com/... (301).
+{$LANDING_ADDRESS::8081} {
+	encode gzip
+
+	@www expression {host}.startsWith("www.")
+	redir @www https://{http.request.host.labels.1}.{http.request.host.labels.0}{uri} permanent
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	root * /srv/landing
+	try_files {path} /index.html
+	file_server
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+{$SITE_ADDRESS} {
+	encode gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# API và trang admin không dành cho máy tìm kiếm; chỉ landing (LANDING_ADDRESS) được lập chỉ mục.
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+
+	handle_path /ai/* {
+		request_body {
+			max_size 16MB
+		}
+		handle /health {
+			reverse_proxy data-mining-api:8000
+		}
+		@protectedAi path /donut/* /spade/*
+		handle @protectedAi {
+			# forward_auth gửi GET /api/auth/check (không kèm body) với các header gốc của request, gồm Authorization.
+			forward_auth core-api:8080 {
+				uri /api/auth/check
+			}
+			reverse_proxy data-mining-api:8000
+		}
+		handle {
+			respond 404
+		}
+	}
+
+	@internalActuator {
+		path /actuator/*
+		not path /actuator/health
+	}
+	handle @internalActuator {
+		respond 404
+	}
+
+	handle {
+		request_body {
+			max_size 50MB
+		}
+		reverse_proxy core-api:8080
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
