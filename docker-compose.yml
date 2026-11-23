@@ -1,0 +1,379 @@
+services:
+  # -1. REVERSE PROXY (Caddy): the only container published on the public interface (80/443). It terminates HTTPS with a
+  # certificate it obtains and renews by itself for SITE_ADDRESS, and forwards to core-api / data-mining-api on
+  # finance-network (routes in deploy/caddy/Caddyfile). Leave SITE_ADDRESS empty on a dev machine: plain HTTP on :80.
+  proxy:
+    image: caddy:2.8-alpine
+    container_name: finance-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS:-:80}
+      # Landing page (index.html: APK download + QR). Server: the root domain, e.g. example.com. Empty: an internal :8081
+      # listener that no port publishes, so a dev machine never asks Let's Encrypt for it.
+      - LANDING_ADDRESS=${LANDING_ADDRESS:-:8081}
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./index.html:/srv/landing/index.html:ro
+      # Search-engine files for the landing domain (without them try_files answers every path with index.html).
+      - ./deploy/landing/robots.txt:/srv/landing/robots.txt:ro
+      - ./deploy/landing/sitemap.xml:/srv/landing/sitemap.xml:ro
+      # Certificates and ACME account: keep them, or Let's Encrypt rate limits may bite after a few rebuilds.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      core-api:
+        condition: service_healthy
+      data-mining-api:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - finance-network
+
+  # 0. DATABASE: PostgreSQL self-hosted on the same VPS (no cloud database).
+  # core-api reaches it on the Docker network as db:5432. The host port is bound to 127.0.0.1 only, for admin
+  # work on the VPS itself (psql, pg_dump); it is never published on the public interface.
+  db:
+    image: postgres:15-alpine
+    container_name: finance-postgres
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      - POSTGRES_DB=finance_db
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d finance_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - finance-network
+
+  # 0b. CACHE: Redis holds only a cache of the statistics (dashboards, admin aggregates). PostgreSQL stays the source of
+  # truth, and core-api reads it directly whenever Redis is down. No port is published, not even on 127.0.0.1: only the
+  # containers of finance-network reach it (admin work: docker compose exec redis redis-cli). No persistence, so a
+  # restart starts empty instead of serving entries older than the database. KEYS, FLUSHALL and FLUSHDB are disabled.
+  redis:
+    image: redis:8.10-alpine
+    container_name: finance-redis
+    user: redis
+    command:
+      - sh
+      - -c
+      - >-
+        exec redis-server
+        --requirepass "$$REDIS_PASSWORD"
+        --maxmemory "$$REDIS_MAXMEMORY"
+        --maxmemory-policy allkeys-lru
+        --save ''
+        --appendonly no
+        --rename-command KEYS ''
+        --rename-command FLUSHALL ''
+        --rename-command FLUSHDB ''
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+      - REDIS_MAXMEMORY=${REDIS_MAXMEMORY:-128mb}
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          # Keep it about 1.5 x REDIS_MAXMEMORY: Redis needs some memory beyond its dataset.
+          memory: ${REDIS_MEMORY_LIMIT:-192M}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - finance-network
+
+  # 0c. AI RAW LOG: MongoDB keeps only an analysis copy of the AI's raw answers (ocr_logs) and the OCR feedback
+  # (ocr_feedbacks). PostgreSQL stays the source of truth for receipts (receipt_processing_attempts). core-api writes
+  # here asynchronously after the PostgreSQL commit and only logs a failure, so the app keeps working while MongoDB is
+  # down. The host port is bound to 127.0.0.1 only (admin work: docker compose exec mongodb mongosh).
+  mongodb:
+    image: mongo:6.0
+    container_name: finance-mongodb
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    ports:
+      - "127.0.0.1:27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:?Set MONGO_ROOT_USERNAME in .env}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD in .env}
+      - MONGO_INITDB_DATABASE=finance_nosql
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    volumes:
+      - mongodb_data:/data/db
+      # Collections, $jsonSchema validators and ALL indexes of the app (Spring auto-index-creation is off). The image runs
+      # *.js files of this folder with mongosh on MONGO_INITDB_DATABASE, but ONLY when mongodb_data is empty (first start).
+      # On an existing volume run it by hand, it is idempotent and writes no data:
+      #   docker compose exec mongodb sh -c 'mongosh -u "$MONGO_INITDB_ROOT_USERNAME" -p "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --quiet /docker-entrypoint-initdb.d/10-mongodb-init.js'
+      - ./scripts/nosql/mongodb_init.js:/docker-entrypoint-initdb.d/10-mongodb-init.js:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - finance-network
+
+  # 0d. SEARCH: Elasticsearch holds only a search index of the transactions (index "transactions"), a copy that can be
+  # rebuilt from PostgreSQL at any time (POST /api/admin/search/reindex). core-api updates it asynchronously after the
+  # PostgreSQL commit and only logs a failure. Off by default: it runs with the "search" profile only
+  # (docker compose --profile search up -d) and core-api uses it only with SEARCH_ENGINE=elasticsearch. Security stays on
+  # (user elastic, ELASTIC_PASSWORD); TLS is off because only finance-network and 127.0.0.1 reach it. Snapshots for the
+  # backup script go to path.repo (volume elasticsearch_snapshots).
+  # 0d'. One-shot: a new named volume is owned by root, and Elasticsearch (uid 1000) then fails every snapshot with
+  # access_denied_exception. Hands the snapshot directory to uid 1000 before Elasticsearch starts (same fix as the demo stack).
+  elasticsearch-init-snapshots:
+    image: elasticsearch:8.11.4
+    container_name: finance-elasticsearch-init
+    profiles: ["search"]
+    user: "0"
+    entrypoint: ["chown", "1000:0", "/usr/share/elasticsearch/snapshots"]
+    volumes:
+      - elasticsearch_snapshots:/usr/share/elasticsearch/snapshots
+    restart: "no"
+    networks:
+      - finance-network
+
+  elasticsearch:
+    image: elasticsearch:8.11.4
+    container_name: finance-elasticsearch
+    profiles: ["search"]
+    depends_on:
+      elasticsearch-init-snapshots:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      # Not ":?": Compose interpolates this even with the profile off, so a required value would stop the default stack.
+      # Left empty, Elasticsearch starts without a password for elastic and its healthcheck (and Kibana) fail.
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+      # Heap 512m of the 1536M limit below: the rest is off-heap, page cache and the JVM of the container.
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - path.repo=/usr/share/elasticsearch/snapshots
+      - action.auto_create_index=false
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsu elastic:$$ELASTIC_PASSWORD http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_snapshots:/usr/share/elasticsearch/snapshots
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          # Not 1G: starting Kibana OOM-kills Elasticsearch at 1 GiB (docs/nosql/bench_results.md, NFR-14).
+          memory: 1536M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - finance-network
+
+  # 0e. KIBANA: a UI over Elasticsearch for admin work only, with the "tools" profile, on 127.0.0.1 (SSH tunnel on the
+  # VPS). Start it with both profiles: docker compose --profile search --profile tools up -d. It logs in as the built-in
+  # user kibana_system, whose password is set once by hand (see KIBANA_PASSWORD in .env.example).
+  kibana:
+    image: kibana:8.11.4
+    container_name: finance-kibana
+    profiles: ["tools"]
+    ports:
+      - "127.0.0.1:5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      # Not ":?": an empty value must not stop the default stack; Kibana then only fails to log in.
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD:-}
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - finance-network
+
+  # 1. CORE BACKEND (Spring Boot Java)
+  core-api:
+    build:
+      context: ./core-backend
+      dockerfile: Dockerfile
+    container_name: finance-core-api
+    # No host port: only the proxy (and the other containers of finance-network) reach it.
+    expose:
+      - "8080"
+    # JWT_SECRET comes from this file (required when SPRING_PROFILES_ACTIVE=prod, see Security/JwtUtil.java). It is not
+    # repeated under "environment" so that the value of DEPLOY_ENV_FILE is the one that counts.
+    env_file:           
+      - ${DEPLOY_ENV_FILE:-.env}
+    environment:
+      - DB_URL=jdbc:postgresql://db:5432/finance_db
+      # AI raw log (OcrMongoService). Short timeouts: a write waits at most 5 s for a MongoDB that is down, then is logged
+      # and dropped. Keep the password URL-safe (letters and digits), it is part of the URI. The Mongo health indicator
+      # is off so a MongoDB outage does not turn /actuator/health (and this container's healthcheck) DOWN.
+      - MONGO_URI=mongodb://${MONGO_ROOT_USERNAME:?Set MONGO_ROOT_USERNAME in .env}:${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD in .env}@mongodb:27017/finance_nosql?authSource=admin&serverSelectionTimeoutMS=5000&connectTimeoutMS=5000
+      - MANAGEMENT_HEALTH_MONGO_ENABLED=false
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=${MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${MAIL_PASSWORD}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+      - PAYMENT_SECRET=${PAYMENT_SECRET}
+      - PAYMENT_MOCK_GATEWAY_URL=${MOCK_GATEWAY_URL}
+      - PAYMENT_WEBHOOK_URL=${PAYMENT_WEBHOOK_URL}
+      - PAYMENT_VNPAY_SECRET=${VNPAY_SECRET}
+      - PAYMENT_ZALOPAY_SECRET=${ZALOPAY_SECRET}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - DATA_MINING_URL=http://data-mining-api:8000
+      # ai-service as seen from inside finance-network (property app.ai-service.url, e.g. /admin/segment).
+      - AI_SERVICE_URL=http://data-mining-api:8000
+      # Demo data (Config/DataSeeder): off unless SEED_DEMO=true; seeds only an empty database, never deletes. The two
+      # passwords must pass @StrongPassword (8-72 chars, a letter and a digit) or the app stops at startup.
+      - APP_SEED_DEMO=${SEED_DEMO:-false}
+      - APP_SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-}
+      - APP_SEED_DEMO_PASSWORD=${SEED_DEMO_PASSWORD:-}
+      # Statistics cache (core-backend/src/main/resources/redis-cache.properties); the CACHE_* settings come from .env.
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+      # Transaction search (core-backend/src/main/resources/search.properties). postgres (default): Elasticsearch is
+      # never contacted. elasticsearch: needs the "search" profile up; core-api still starts and writes without it.
+      - SEARCH_ENGINE=${SEARCH_ENGINE:-postgres}
+      - ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+    # Admin backups (pg_dump files) outlive rebuilds of the image.
+    volumes:
+      - core_backups:/app/backups
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      data-mining-api:
+        condition: service_healthy
+      # Not a blocker: core-api starts (and keeps running) without MongoDB.
+      mongodb:
+        condition: service_started
+        required: false
+    deploy:
+      resources:
+        limits:
+          # The JVM takes 75% of it as max heap (MaxRAMPercentage in core-backend/Dockerfile). 512M runs close to the
+          # limit once the demo data is loaded; raise CORE_API_MEMORY_LIMIT on a server with spare RAM.
+          memory: ${CORE_API_MEMORY_LIMIT:-512M}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - finance-network
+
+  # 2. DATA MINING SERVICE (FastAPI & Donut)
+  data-mining-api:
+    build: 
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: finance-data-mining
+    # No host port: the mobile app reaches it through the proxy (<site>/ai/...), core-api directly on finance-network.
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - finance-network
+
+networks:
+  finance-network:
+    driver: bridge
+
+volumes:
+  # All database data lives here and survives rebuilds and restarts. Never run "docker compose down -v": it deletes it.
+  postgres_data:
+  mongodb_data:
+  # Only a copy of PostgreSQL: losing it costs one reindex. Snapshots live in their own volume.
+  elasticsearch_data:
+  elasticsearch_snapshots:
+  core_backups:
+  caddy_data:
+  caddy_config:
