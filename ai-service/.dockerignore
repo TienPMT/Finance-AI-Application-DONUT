@@ -1,0 +1,35 @@
+# Python Caches & Testing
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+
+# Virtual Environments
+venv/
+env/
+.venv/
+
+# Security 
+.env
+*.pem
+*.key
+
+# IDEs & Git
+.idea/
+.vscode/
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+
+# Training data, experiments & notebooks (not needed at runtime)
+data1/
+# Chỉ giữ weights V5 đang phục vụ; V3 không còn dùng lúc chạy
+Version3/
+Version5/*
+!Version5/donut_result/
+*.ipynb
