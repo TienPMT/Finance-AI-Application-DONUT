@@ -1,107 +1,80 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Any, Dict, List, Optional
+import asyncio
 import uvicorn
 import torch
-from PIL import Image
-from transformers import DonutProcessor, VisionEncoderDecoderModel, AutoTokenizer
+from PIL import Image, ImageOps
+from transformers import DonutProcessor, VisionEncoderDecoderModel
 import re
 import io
 import os
-from wcm_spade import WCMSpade
+import threading
+import logging
+
+from starlette.concurrency import run_in_threadpool
+
+from spending_analysis import DEFAULT_TOP_N, SpadeAnalyzeResponse, analyze_spending
+from spending_data import MAX_AMOUNT, MAX_TRANSACTIONS, TransactionIn, count_undated, expenses_from
+from wcm_spade import DEFAULT_MIN_SUP
 import budget_advisor
+import rfm_segmentation
+from rfm_segmentation import RfmInput
+from receipt_postprocess import fields_from_sequence, normalize_receipt
+from logging_config import configure_logging
+
+configure_logging()
+logger = logging.getLogger(__name__)
+
+MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+MAX_IMAGE_PIXELS = 40_000_000
+Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
+ALLOWED_IMAGE_FORMATS = frozenset({"JPEG", "PNG", "WEBP"})
+
+EMPTY_IMAGE_MESSAGE = "File ảnh nhận được bị rỗng (0 bytes)"
+IMAGE_TOO_LARGE_MESSAGE = "Ảnh quá lớn, vui lòng chụp lại với độ phân giải thấp hơn."
+UNSUPPORTED_IMAGE_MESSAGE = "Chỉ nhận ảnh JPEG, PNG hoặc WEBP."
+UNREADABLE_IMAGE_MESSAGE = "Không đọc được file ảnh."
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BANK_JSON_PATH = os.path.join(BASE_DIR, "Version3", "transactions_bank_clean.json")
 app = FastAPI()
 
-# =====================================================================
-# [10/10 FEATURE] KHỞI ĐỘNG LẠNH (COLD START) TỪ BANK DATA KAGGLE
-# =====================================================================
-import json
-GLOBAL_TRENDS = []
-
-def _init_global_trends():
-    global GLOBAL_TRENDS
-    BANK_JSON_PATH = os.path.join(BASE_DIR, "Version3", "transactions_bank_clean.json")
-    try:
-        if os.path.exists(BANK_JSON_PATH):
-            print("[COLD START] Đang nạp và khai phá 4.604 giao dịch Ngân hàng...")
-            with open(BANK_JSON_PATH, 'r', encoding='utf-8') as f:
-                bank_txs = json.load(f)
-            
-            # Chạy mồi hàm advise một lần duy nhất lúc start server để lấy Trends
-            dummy_res = budget_advisor.advise(bank_txs, target=0, monthly_income=1)
-            GLOBAL_TRENDS = dummy_res.get("trends", [])
-            print(f"[*] COLD START READY: Đã nạp thành công {len(GLOBAL_TRENDS)} Luật thói quen chung!")
-        else:
-            print("[!] Không tìm thấy file transactions_bank_clean.json để làm Cold Start.")
-    except Exception as e:
-        print(f"[!] Lỗi nạp Bank Data: {e}")
-
-_init_global_trends()
-# =====================================================================
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "Version3", "donut_result")
+MODEL_PATH = os.path.join(BASE_DIR, "Version5", "donut_result")
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-IMAGE_HEIGHT = 1280
-IMAGE_WIDTH = 960
+# Kích thước ảnh lúc train V5 (Version5/model_config.py DEFAULT_IMAGE_SIZE)
+IMAGE_HEIGHT = 1920
+IMAGE_WIDTH = 1440
 
-print(f"Đang khởi động AI DONUT Engine trên thiết bị: [{DEVICE.upper()}]...")
+logger.info("Đang khởi động AI DONUT Engine trên thiết bị: [%s]...", DEVICE.upper())
 if not os.path.exists(MODEL_PATH):
     raise RuntimeError(f"Không tìm thấy weights tại {MODEL_PATH}")
 
-processor = DonutProcessor.from_pretrained("naver-clova-ix/donut-base")
-try:
-    processor.tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-except Exception:
-    pass
+# Processor + tokenizer (đã mở rộng ký tự tiếng Việt) được lưu cùng weights V5
+processor = DonutProcessor.from_pretrained(MODEL_PATH)
 
-model = VisionEncoderDecoderModel.from_pretrained(MODEL_PATH, ignore_mismatched_sizes=True).to(DEVICE)
+model = VisionEncoderDecoderModel.from_pretrained(MODEL_PATH).to(DEVICE)
 model.eval()
-print("AI DONUT Engine đã tải xong!")
+logger.info("AI DONUT Engine đã tải xong!")
 
-def extract_final_cost(raw_cost_str: str) -> int:
 
-    clean_str = raw_cost_str.replace('.', '').replace(',', '')
-    numbers = re.findall(r'\d+', clean_str)
-    if numbers:
-        return max(int(num) for num in numbers)
-    return 0
+def _raw_fields(sequence: str, prediction: Dict[str, Any]) -> Dict[str, str]:
+    """Giá trị thô từng trường: đọc thẻ trong chuỗi (như lúc chấm V5), thiếu thì lấy từ token2json."""
+    fields = fields_from_sequence(sequence)
+    seller = prediction.get("seller")
+    if isinstance(seller, dict):
+        for key, value in fields.items():
+            if not value and seller.get(key) is not None:
+                fields[key] = str(seller[key])
+    return fields
 
-def clean_vietnamese_text(sequence: str) -> str:
-    sequence = re.sub(r'([,.;])([A-ZĐa-zà-ỹ])', r'\1 \2', sequence)
-    toned_vowels = "áắấéếíóốớúứýàằầèềìòồờùừỳảẳẩẻểỉỏổởủửỷãẵẫẽễĩõỗỡũữỹạặậẹệịọộợụựỵ"
-    toned_vowels += toned_vowels.upper()
-    sequence = re.sub(r'(["' + toned_vowels + r'])(["' + toned_vowels + r'])', r'\1 \2', sequence)
 
-    all_vowels = "aăâeêioôơuưyáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵĐđ"
-    all_vowels += all_vowels.upper()
-    tails = ["c", "ch", "m", "n", "ng", "nh", "p", "t", "i", "y", "a", "o", "u"]
-    tails += [t.upper() for t in tails]
-    tail_pattern = "|".join(tails)
-    pattern = r"([" + all_vowels + r"])\s+(" + tail_pattern + r")\b"
+# Mỗi lúc chỉ một lượt DONUT: model.generate tốn nhiều RAM/CPU, chạy song song dễ làm sập máy
+_donut_lock = threading.Lock()
 
-    old_sequence = ""
-    while old_sequence != sequence:
-        old_sequence = sequence
-        sequence = re.sub(pattern, r"\1\2", sequence)
 
-    return sequence
-
-@app.post("/donut/scan")
-async def extract_receipt_info(image: UploadFile = File(...)):
-    print(f"\n[REQUEST] Đã nhận hóa đơn từ App: {image.filename}")
-
-    try:
-        contents = await image.read()
-        pil_img = Image.open(io.BytesIO(contents)).convert("RGB")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Lỗi đọc file ảnh: {str(e)}")
-
+def _run_donut(pil_img: Image.Image) -> str:
+    """Suy luận DONUT (đồng bộ, nặng CPU): trả về chuỗi sequence đã bỏ eos/pad."""
     pixel_values = processor(
         pil_img,
         return_tensors="pt",
@@ -111,7 +84,6 @@ async def extract_receipt_info(image: UploadFile = File(...)):
     ).pixel_values.to(DEVICE)
 
     start_token_id = processor.tokenizer.convert_tokens_to_ids("<s_seller>")
-
     outputs = model.generate(
         pixel_values,
         max_length=768,
@@ -123,577 +95,219 @@ async def extract_receipt_info(image: UploadFile = File(...)):
 
     sequence = processor.batch_decode(outputs)[0]
     sequence = sequence.replace(processor.tokenizer.eos_token, "").replace(processor.tokenizer.pad_token, "")
-    sequence = re.sub(r"<pad>", "", sequence)
-    sequence = clean_vietnamese_text(sequence)
+    return re.sub(r"<pad>", "", sequence)
+
+
+def _run_donut_locked(pil_img: Image.Image) -> str:
+    """Giữ _donut_lock quanh _run_donut để các lượt scan đọc lần lượt từng ảnh."""
+    with _donut_lock:
+        return _run_donut(pil_img)
+
+
+# Số lượt scan được xếp hàng sau lượt đang chạy. Lượt chờ nằm ở event loop (asyncio), không giữ thread của threadpool,
+# nên nhiều scan cùng lúc không làm treo /spade/* và /admin/*. Hàng đầy thì trả 503.
+SCAN_QUEUE_LIMIT = 4
+SCAN_BUSY_MESSAGE = "Hệ thống đang đọc nhiều hóa đơn cùng lúc, vui lòng thử lại sau ít phút."
+
+
+class _ScanGate:
+    """Một lượt DONUT mỗi lúc (Semaphore(1)) và đếm số lượt đã nhận (đang chạy + đang chờ) trên một event loop."""
+
+    def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
+        self.loop = loop
+        self.semaphore = asyncio.Semaphore(1)
+        self.admitted = 0
+
+
+_scan_gate: Optional[_ScanGate] = None
+
+
+def _current_scan_gate() -> _ScanGate:
+    """Gate của event loop đang chạy. Uvicorn chỉ có một loop; test có thể tạo nhiều loop nên gate được tạo lại theo loop."""
+    global _scan_gate
+    loop = asyncio.get_running_loop()
+    if _scan_gate is None or _scan_gate.loop is not loop:
+        _scan_gate = _ScanGate(loop)
+    return _scan_gate
+
+
+@app.get("/health")
+async def health_check() -> Dict[str, str]:
+    return {"status": "ok"}
+
+
+def _decode_image(contents: bytes) -> Image.Image:
+    """Giải mã ảnh (nặng CPU, chạy trong threadpool). Loại theo định dạng Pillow đọc được,
+    không tin Content-Type (app gửi application/octet-stream); kiểm số pixel trước khi giải mã."""
+    try:
+        pil_img = Image.open(io.BytesIO(contents))
+    except Image.DecompressionBombError:
+        logger.warning("Ảnh vượt giới hạn pixel của Pillow")
+        raise HTTPException(status_code=413, detail=IMAGE_TOO_LARGE_MESSAGE)
+    except Exception:
+        logger.warning("Không mở được ảnh", exc_info=True)
+        raise HTTPException(status_code=400, detail=UNREADABLE_IMAGE_MESSAGE)
+    if pil_img.format not in ALLOWED_IMAGE_FORMATS:
+        raise HTTPException(status_code=415, detail=UNSUPPORTED_IMAGE_MESSAGE)
+    if pil_img.width * pil_img.height > MAX_IMAGE_PIXELS:
+        raise HTTPException(status_code=413, detail=IMAGE_TOO_LARGE_MESSAGE)
+    try:
+        # Khắc phục lỗi xoay ảnh EXIF từ Camera Android & convert sang RGB chuẩn
+        return ImageOps.exif_transpose(pil_img).convert("RGB")
+    except Image.DecompressionBombError:
+        logger.warning("Ảnh vượt giới hạn pixel của Pillow")
+        raise HTTPException(status_code=413, detail=IMAGE_TOO_LARGE_MESSAGE)
+    except Exception:  # file cắt cụt, dữ liệu hỏng
+        logger.warning("Không giải mã được ảnh", exc_info=True)
+        raise HTTPException(status_code=400, detail=UNREADABLE_IMAGE_MESSAGE)
+
+
+class DonutScanResponse(BaseModel):
+    """Kết quả /donut/scan. Khóa lạ từ token2json (menu, total, ...) được giữ nguyên (extra=allow);
+    route dùng response_model_exclude_unset nên khóa vắng mặt không bị thêm thành null."""
+    model_config = ConfigDict(extra="allow")
+
+    seller: Optional[Any] = None
+    raw_text: Optional[str] = None
+    normalized: Optional[Dict[str, Any]] = None
+
+
+@app.post("/donut/scan", response_model=DonutScanResponse, response_model_exclude_unset=True)
+async def extract_receipt_info(image: UploadFile = File(...)) -> DonutScanResponse:
+    contents = await image.read(MAX_UPLOAD_BYTES + 1)
+    if not contents:
+        raise HTTPException(status_code=400, detail=EMPTY_IMAGE_MESSAGE)
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=IMAGE_TOO_LARGE_MESSAGE)
+
+    gate = _current_scan_gate()
+    if gate.admitted >= 1 + SCAN_QUEUE_LIMIT:
+        logger.warning("Từ chối scan: %d lượt đang chạy/chờ", gate.admitted)
+        raise HTTPException(status_code=503, detail=SCAN_BUSY_MESSAGE)
+    gate.admitted += 1
+    try:
+        pil_img = await run_in_threadpool(_decode_image, contents)
+        logger.info("Đã mở ảnh, kích thước %s", pil_img.size)
+
+        # Chờ lượt ở event loop; chỉ lượt đang chạy mới chiếm một thread để suy luận,
+        # nên event loop vẫn trả lời /health và các request khác.
+        async with gate.semaphore:
+            sequence = await run_in_threadpool(_run_donut_locked, pil_img)
+    finally:
+        gate.admitted -= 1
 
     try:
         prediction = processor.token2json(sequence)
-        if "seller" in prediction and "total_cost" in prediction["seller"]:
-            raw_cost = prediction["seller"]["total_cost"]
-            prediction["seller"]["total_cost_number"] = extract_final_cost(raw_cost)
-
-    except Exception as e:
-        print(f"[CẢNH BÁO] Lỗi parse JSON từ Donut: {e}")
+    except Exception:
+        logger.warning("Lỗi parse JSON từ Donut", exc_info=True)
         prediction = {"raw_text": sequence}
-    print(f" [SUCCESS] Bóc tách thành công: {prediction}")
-    return prediction
+    if not isinstance(prediction, dict):
+        prediction = {"raw_text": sequence}
 
-class SpadeTx(BaseModel):
-    category: str
-    amount: float = 0.0
-    date: str = ""
-    isExpense: bool = True
+    # Hậu xử lý Regex (receipt_postprocess): giữ nguyên các field cũ, thêm "normalized" kèm cờ valid từng trường
+    normalized = normalize_receipt(_raw_fields(sequence, prediction))
+    seller = prediction.get("seller")
+    if isinstance(seller, dict):
+        if normalized.total_cost.valid:
+            seller["total_cost_number"] = normalized.total_cost.value
+        else:
+            seller.pop("total_cost_number", None)
+    prediction["normalized"] = normalized.model_dump()
+    if normalized.invalid_fields:
+        logger.info("Trường cần người dùng kiểm tra: %s", normalized.invalid_fields)
+    return DonutScanResponse.model_validate(prediction)
+
 
 class SpadeRequest(BaseModel):
-    transactions: List[SpadeTx]
-    max_gap_days: int = 7
-    min_sup_factor: float = 0.5
-    top_n: int = 10
-    alpha: float = 0.5
-    beta: float = 0.5
-
+    # Trường thừa (alpha, beta, max_gap_days của APK cũ) bị Pydantic bỏ qua.
+    transactions: List[TransactionIn] = Field(max_length=MAX_TRANSACTIONS)
+    top_n: int = Field(DEFAULT_TOP_N, ge=1, le=50)
+    min_sup_factor: float = Field(DEFAULT_MIN_SUP, gt=0, le=1)
 
 class RecommendRequest(BaseModel):
-    transactions: List[SpadeTx]
-    target: float = 0.0          # mục tiêu tiết kiệm
-    current: float = 0.0         # đã tiết kiệm được
-    months_left: int = 0         # số tháng còn lại tới hạn
-    monthly_income: Optional[float] = None  # thu nhập/tháng (None → tự tính từ giao dịch thu)
-    needed_monthly: Optional[float] = None  # cần tiết kiệm/tháng (None → tính từ target/current/months_left)
-    alpha: float = 0.5
-    min_sup_factor: float = 0.4
-    max_cut_ratio: float = 0.30
-
-def _parse_date(s: str):
-    if not s:
-        return None
-    s = s.strip().replace("Z", "")
-    try:
-        return datetime.fromisoformat(s)
-    except ValueError:
-        try:
-            return datetime.fromisoformat(s[:10])
-        except ValueError:
-            return None
-
-def _build_user_sequences(exp):
-    """
-    Biến lịch sử chi tiêu của 1 user thành sequence DB cho WCM-SPADE.
-    Mỗi THÁNG = 1 sequence; mỗi NGÀY = 1 event (itemset = các danh mục chi trong ngày).
-    Trả về (sequences, item_prices).
-    """
-    from collections import defaultdict
-    by_month = defaultdict(lambda: defaultdict(set))  # (y,m) -> day -> set(category)
-    price_sum = defaultdict(float)
-    price_cnt = defaultdict(int)
-    for d, cat, amt in exp:
-        by_month[(d.year, d.month)][d.toordinal()].add(cat)
-        price_sum[cat] += amt
-        price_cnt[cat] += 1
-
-    sequences = []
-    for _, days in by_month.items():
-        seq = [tuple(sorted(days[day])) for day in sorted(days.keys())]
-        sequences.append(seq)
-
-    item_prices = {c: price_sum[c] / price_cnt[c] for c in price_sum}
-    return sequences, item_prices
+    # Old APK fields (alpha, min_sup_factor, max_cut_ratio) are ignored by Pydantic.
+    transactions: List[TransactionIn] = Field(max_length=MAX_TRANSACTIONS)
+    target: float = Field(0, ge=0, le=MAX_AMOUNT)
+    current: float = Field(0, ge=0, le=MAX_AMOUNT)
+    months_left: Optional[int] = Field(None, ge=1, le=600)
+    monthly_income: Optional[float] = Field(None, ge=0, le=MAX_AMOUNT)
+    needed_monthly: Optional[float] = Field(None, ge=0, le=MAX_AMOUNT)
 
 
-@app.post("/spade/analyze")
-def analyze_patterns(req: SpadeRequest):
-    print(f"\n[REQUEST] WCM-SPADE nhận {len(req.transactions)} giao dịch")
-
-    exp = []
-    for t in req.transactions:
-        d = _parse_date(t.date)
-        if t.isExpense and d is not None:
-            exp.append((d, t.category, max(t.amount, 0.0)))
-    exp.sort(key=lambda x: x[0])
-
-    # [XỬ LÝ COLD START]: Nếu user có < 10 giao dịch, trả về luật Global của Ngân hàng!
-    if len(exp) < 10 and GLOBAL_TRENDS:
-        print("[INFO] User mới -> Trả về Luật Global (Bank Data)")
-        patterns = []
-        for p in GLOBAL_TRENDS[:req.top_n]:
-            patterns.append({
-                "pattern": p["pattern"],
-                "count": p["count"],
-                "weight": p["wsupport"],
-                "wsupport": "Dữ liệu chung (Global)",
-            })
-        return {
-            "patterns": patterns,
-            "effectiveMinSup": "Auto",
-            "meanW": "Auto",
-            "nSequences": 4604, # Fake số lượng user thực tế từ file Kaggle
-            "message": "Dữ liệu cá nhân ít, đang hiển thị Luật từ CSDL Ngân hàng."
-        }
-
-    # Nếu User cũ (>10 giao dịch), chạy WCM-SPADE cá nhân hóa như bình thường
-    sequences, item_prices = _build_user_sequences(exp)
-    if len(sequences) < 1:
-        return {"patterns": [], "message": "Không đủ dữ liệu chuỗi"}
-
-    engine = WCMSpade(min_sup=req.min_sup_factor, alpha=req.alpha, max_pattern_length=4)
-    result = engine.mine(sequences, item_prices)
-
-    seq_patterns = [p for p in result.patterns if len(p.itemsets) >= 2 or sum(len(it) for it in p.itemsets) >= 2]
-    patterns = []
-    for p in seq_patterns[: req.top_n]:
-        human = " → ".join("+".join(str(i) for i in it) for it in p.itemsets)
-        cover = (p.raw_sup / result.n_sequences * 100) if result.n_sequences else 0.0
-        patterns.append({
-            "pattern": human,
-            "count": p.raw_sup,
-            "weight": round(p.wsup, 4),
-            "wsupport": f"{cover:.1f}%",
-        })
-
-    print(f" [SUCCESS] Trả về {len(patterns)} mẫu Cá nhân hóa.")
-    return {
-        "patterns": patterns,
-        "effectiveMinSup": result.effective_min_sup,
-        "meanW": round(result.mean_w, 4),
-        "nSequences": result.n_sequences,
-    }
-
-@app.post("/spade/recommend")
-def recommend_budget(req: RecommendRequest):
-    print(f"\n[REQUEST] BudgetAdvisor nhận {len(req.transactions)} giao dịch")
-    txs = [
-        {"category": t.category, "amount": t.amount, "date": t.date, "isExpense": t.isExpense}
-        for t in req.transactions
-    ]
-    
-    # Chạy Budget Advisor thuần túy trên số tiền thật của User (Không trộn tiền Global)
-    if not txs:
-        # User chưa tiêu đồng nào
-        return {
-            "trends": GLOBAL_TRENDS[:5],
-            "tagStats": [],
-            "goal": {"neededMonthly": 0, "monthlyIncome": req.monthly_income or 0, "monthlyExpense": 0, "surplus": 0, "gap": 0},
-            "recommendations": [],
-            "summary": "Bạn chưa có giao dịch. Hãy nhập chi tiêu để AI tính toán nhé! (Bên dưới là các thói quen chung tham khảo)"
-        }
-
-    result = budget_advisor.advise(
-        txs,
-        target=req.target,
-        current=req.current,
-        months_left=req.months_left,
-        monthly_income=req.monthly_income,
-        needed_monthly=req.needed_monthly,
-        alpha=req.alpha,
-        min_sup_factor=req.min_sup_factor,
-        max_cut_ratio=req.max_cut_ratio,
+@app.post("/spade/analyze", response_model=SpadeAnalyzeResponse)
+def analyze_patterns(req: SpadeRequest) -> SpadeAnalyzeResponse:
+    """Phân tích chi tiêu 26 tuần (CPU-bound nên dùng def, chạy trong threadpool)."""
+    skipped = count_undated(req.transactions)
+    if skipped:
+        logger.warning("spade/analyze: bỏ %d giao dịch có ngày không đọc được", skipped)
+    return analyze_spending(
+        expenses_from(req.transactions), top_n=req.top_n, min_sup=req.min_sup_factor, skipped_rows=skipped
     )
-    
-    # [XỬ LÝ COLD START]: Nếu user < 10 giao dịch, nhúng Luật Global vào phần 'trends'
-    if len(txs) < 10 and GLOBAL_TRENDS:
-        result["trends"] = GLOBAL_TRENDS[:5] # Lấy 5 luật tiêu biểu
-        summary_old = result.get("summary", "")
-        result["summary"] = f"(AI dùng Luật Khai Phá Chung) {summary_old}"
-        
-    print(f" [SUCCESS] BudgetAdvisor: {len(result.get('recommendations', []))} đề xuất")
+
+
+@app.post("/spade/recommend", response_model=budget_advisor.RecommendResponse)
+def recommend_budget(req: RecommendRequest) -> Dict[str, Any]:
+    logger.info("BudgetAdvisor nhận %d giao dịch", len(req.transactions))
+    try:
+        result = budget_advisor.advise(
+            req.transactions,
+            target=req.target,
+            current=req.current,
+            months_left=req.months_left,
+            monthly_income=req.monthly_income,
+            needed_monthly=req.needed_monthly,
+        )
+    except budget_advisor.AdviceError as e:
+        # Chỉ trả các câu cố định đã biết; nội dung khác (nếu có) chỉ nằm trong log.
+        message = str(e)
+        if message not in budget_advisor.ADVICE_ERROR_MESSAGES:
+            logger.error("BudgetAdvisor từ chối với lý do ngoài danh sách: %s", message)
+            message = budget_advisor.ADVICE_FAILED_MESSAGE
+        else:
+            logger.info("BudgetAdvisor từ chối: %s", message)
+        raise HTTPException(status_code=422, detail=message)
+
+    logger.info("BudgetAdvisor: %d đề xuất", len(result.get("recommendations", [])))
     return result
 
 
-@app.post("/spade/apriori")
-def spade_apriori(req: SpadeRequest):
-    """Khai thác luật kết hợp Apriori trên lịch sử cá nhân của người dùng."""
-    from collections import defaultdict
-    import association_rules
-    
-    # Gom baskets theo ngày
-    baskets = defaultdict(set)
-    for t in req.transactions:
-        if t.isExpense:
-            d = _parse_date(t.date)
-            date_str = d.strftime("%Y-%m-%d") if d else "unknown"
-            baskets[date_str].add(t.category)
-    
-    data = [list(b) for b in baskets.values()]
-    if not data:
-        return {"rules": [], "message": "Chưa có đủ giao dịch để tìm thói quen mua sắm."}
-        
-    model = association_rules.Apriori(min_support=0.1, min_confidence=0.4)
-    rules = model.run(data)
-    return {"rules": rules[:10]}
+MAX_RFM_USERS = 100_000
 
 
-@app.post("/spade/regression")
-def spade_regression(req: SpadeRequest):
-    """Dự báo chi tiêu tháng tới cho người dùng dựa trên hồi quy tuyến tính."""
-    from collections import defaultdict
-    import numpy as np
-    from sklearn.linear_model import LinearRegression
-    
-    # Gom chi tiêu theo tháng
-    monthly = defaultdict(float)
-    for t in req.transactions:
-        if t.isExpense:
-            d = _parse_date(t.date)
-            if d:
-                m_key = f"{d.year}-{d.month:02d}"
-                monthly[m_key] += t.amount
-                
-    months_sorted = sorted(monthly.keys())
-    if len(months_sorted) < 2:
-        return {"prediction": 0, "message": "Cần dữ liệu của ít nhất 2 tháng để dự báo."}
-        
-    # X = số thứ tự tháng (0, 1, 2...), y = số tiền
-    X = np.array(range(len(months_sorted))).reshape(-1, 1)
-    y = np.array([monthly[m] for m in months_sorted])
-    
-    model = LinearRegression().fit(X, y)
-    next_month_idx = len(months_sorted)
-    pred = model.predict([[next_month_idx]])[0]
-    
+class UserRFM(BaseModel):
+    user_id: str = Field(min_length=1, max_length=20, pattern=r"^\d+$")
+    recency: int = Field(ge=0, le=36500)
+    frequency: int = Field(ge=0, le=10_000_000)
+    monetary: float = Field(ge=0, le=1e15)
+
+
+class AdminSegmentRequest(BaseModel):
+    users: List[UserRFM] = Field(max_length=MAX_RFM_USERS)
+
+
+class SegmentOut(BaseModel):
+    user_id: str
+    label: str
+    rfm: str
+
+
+class AdminSegmentResponse(BaseModel):
+    segments: List[SegmentOut]
+
+
+@app.post("/admin/segment", response_model=AdminSegmentResponse)
+def segment_users(req: AdminSegmentRequest) -> Dict[str, Any]:
+    logger.info("Đang phân lớp %d khách hàng RFM...", len(req.users))
+    results = rfm_segmentation.segment_users(
+        [RfmInput(u.user_id, u.recency, u.frequency, u.monetary) for u in req.users]
+    )
     return {
-        "prediction": round(float(pred), 2),
-        "lastMonth": round(float(y[-1]), 2),
-        "trend": "tăng" if pred > y[-1] else "giảm"
+        "segments": [
+            {"user_id": r.user_id, "label": r.label.value, "rfm": r.rfm}
+            for r in results
+        ]
     }
-
-
-# ===================== DEMO TA-FENG (Khai Phá Dữ Liệu) =====================
-# Trang web so sánh WCM-SPADE vs baselines (TOP/Item-KNN/User-KNN/K-Means)
-# trên bộ Ta-Feng theo paper ICT-1. Mở từ nút trong tab Phân tích AI (Flutter).
-
-class TafengRequest(BaseModel):
-    min_sup: float = 0.01
-    alpha: float = 0.5
-    max_customers: int = 3000
-    item_col: str = "PRODUCT_SUBCLASS"
-
-
-class TafengPredictRequest(TafengRequest):
-    customer_idx: int = 0
-    top_k: int = 10
-
-
-class AprioriRequest(BaseModel):
-    min_sup: float = 0.01
-    min_conf: float = 0.3
-    max_rows: int = 100000
-    item_col: str = "PRODUCT_SUBCLASS"
-
-
-class RegressionRequest(BaseModel):
-    max_customers: int = 10000
-
-
-@app.get("/tafeng")
-def tafeng_dashboard():
-    return FileResponse(os.path.join(BASE_DIR, "tafeng_dashboard.html"))
-
-
-@app.post("/tafeng/run")
-def tafeng_run(req: TafengRequest):
-    import tafeng_demo
-    print(f"\n[REQUEST] Ta-Feng demo: minSup={req.min_sup} alpha={req.alpha} "
-          f"maxCust={req.max_customers} itemCol={req.item_col}")
-    try:
-        out = tafeng_demo.run_experiment(
-            min_sup=req.min_sup,
-            alpha=req.alpha,
-            max_customers=req.max_customers,
-            item_col=req.item_col,
-        )
-    except FileNotFoundError:
-        raise HTTPException(status_code=500,
-                            detail="Không tìm thấy CSV Ta-Feng. Kiểm tra CSV_PATH trong run_tafeng.py.")
-    return out
-
-
-class TafengClassifyRequest(BaseModel):
-    max_customers: int = 8000
-    item_col: str = "PRODUCT_SUBCLASS"
-
-
-_QUALITY_CACHE: dict = {}
-_CLASSIFY_CACHE: dict = {}
-
-
-@app.post("/tafeng/quality")
-def tafeng_quality(req: TafengRequest):
-    """EDA + báo cáo làm sạch dữ liệu Ta-Feng (rubric: làm sạch/phân tích dữ liệu)."""
-    import data_quality
-    key = (req.max_customers, req.item_col)
-    if key in _QUALITY_CACHE:
-        return _QUALITY_CACHE[key]
-    try:
-        out = data_quality.analyze(max_customers=req.max_customers, item_col=req.item_col)
-    except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="Không tìm thấy CSV Ta-Feng.")
-    _QUALITY_CACHE[key] = out
-    return out
-
-
-@app.post("/tafeng/classify")
-def tafeng_classify(req: TafengClassifyRequest):
-    """Phân lớp khách chi tiêu cao/thấp: Decision Tree / Naive Bayes / KNN (rubric Chương 3)."""
-    import classification
-    key = (req.max_customers, req.item_col)
-    if key in _CLASSIFY_CACHE:
-        return _CLASSIFY_CACHE[key]
-    try:
-        out = classification.run(max_customers=req.max_customers, item_col=req.item_col)
-    except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="Không tìm thấy CSV Ta-Feng.")
-    _CLASSIFY_CACHE[key] = out
-    return out
-
-
-@app.post("/tafeng/apriori")
-def tafeng_apriori(req: AprioriRequest):
-    """Khai thác luật kết hợp Apriori (Syllabus Chương 2)."""
-    import association_rules
-    try:
-        data = association_rules.load_baskets(max_rows=req.max_rows, item_col=req.item_col)
-        model = association_rules.Apriori(min_support=req.min_sup, min_confidence=req.min_conf)
-        rules = model.run(data)
-        return {"rules": rules[:50], "n_transactions": len(data)}
-    except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="Không tìm thấy CSV Ta-Feng.")
-
-
-@app.post("/tafeng/regression")
-def tafeng_regression(req: RegressionRequest):
-    """Phân tích hồi quy dự báo mức chi tiêu (Syllabus Chương 5)."""
-    import regression
-    try:
-        X, y = regression.build_regression_data(max_customers=req.max_customers)
-        from sklearn.model_selection import train_test_split
-        from sklearn.linear_model import LinearRegression
-        from sklearn.metrics import mean_absolute_error, r2_score
-        
-        Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=42)
-        model = LinearRegression().fit(Xtr, ytr)
-        pred = model.predict(Xte)
-        
-        return {
-            "mae": round(mean_absolute_error(yte, pred), 2),
-            "r2": round(r2_score(yte, pred), 4),
-            "coef": model.coef_.tolist(),
-            "intercept": round(float(model.intercept_), 4),
-            "n_train": len(Xtr),
-            "n_test": len(Xte)
-        }
-    except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="Không tìm thấy CSV Ta-Feng.")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/tafeng/predict")
-def tafeng_predict(req: TafengPredictRequest):
-    import tafeng_demo
-    try:
-        out = tafeng_demo.predict_customer(
-            customer_idx=req.customer_idx,
-            min_sup=req.min_sup,
-            alpha=req.alpha,
-            max_customers=req.max_customers,
-            item_col=req.item_col,
-            top_k=req.top_k,
-        )
-    except FileNotFoundError:
-        raise HTTPException(status_code=500,
-                            detail="Không tìm thấy CSV Ta-Feng. Kiểm tra CSV_PATH trong run_tafeng.py.")
-    return out
-
-
-# ---- Trợ lý Chi tiêu: tra theo CUSTOMER_ID thật (Loyalty Card / Data Lake) ----
-class SpadePredictRequest(BaseModel):
-    customer_id: str
-    top_k: int = 8
-
-
-@app.post("/spade/predict")
-def spade_predict(req: SpadePredictRequest):
-    """Quét lịch sử của 1 CUSTOMER_ID thật trong Data Lake Ta-Feng, chạy WCM-SPADE,
-    trả luật thói quen + dự báo giỏ hàng kế tiếp + giá trị kinh tế."""
-    import tafeng_demo
-    print(f"\n[REQUEST] /spade/predict customer_id={req.customer_id} top_k={req.top_k}")
-    try:
-        out = tafeng_demo.spade_predict(req.customer_id, top_k=req.top_k)
-    except FileNotFoundError:
-        raise HTTPException(status_code=500,
-                            detail="Không tìm thấy CSV Ta-Feng. Kiểm tra CSV_PATH trong run_tafeng.py.")
-    return out
-
-
-# ---- Giỏ hàng tương tác: chọn sản phẩm → gợi ý WCM-SPADE ----
-class CartRecommendRequest(BaseModel):
-    items: list[str]
-    top_k: int = 5
-    max_customers: int = 3000
-
-
-@app.get("/tafeng/products")
-def tafeng_products(max_customers: int = 3000, limit: int = 60):
-    """Danh sách sản phẩm Ta-Feng (đã gán nhãn tự động) cho picker. Sắp theo count giảm dần."""
-    import tafeng_demo
-    import item_labels
-    exp = tafeng_demo.run_experiment(
-        min_sup=0.01, alpha=0.5, max_customers=max_customers,
-        item_col="PRODUCT_SUBCLASS", ks=(5, 10))
-    if "error" in exp:
-        return exp
-    key = tafeng_demo._key(0.01, 0.5, max_customers, "PRODUCT_SUBCLASS", (5, 10))
-    d = tafeng_demo._DETAIL[key]
-    counts = d.get("item_counts") or {}
-    prices = d.get("item_prices") or {}
-    rows = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)[:limit]
-    labels = item_labels.build_labels([it for it, _ in rows], prices, counts)
-    out = []
-    for it, _ in rows:
-        lab = labels.get(str(it), {})
-        out.append({
-            "code": str(it),
-            "name": lab.get("name") or str(it),
-            "price": lab.get("price"),
-            "count": lab.get("count"),
-        })
-    return {"products": out, "n": len(out)}
-
-
-@app.post("/tafeng/recommend")
-def tafeng_recommend(req: CartRecommendRequest):
-    """Nhận danh sách mã sản phẩm user chọn → dựng history giả (1 basket) →
-    gọi NextBasketPredictor.predict() trả gợi ý WCM-SPADE + pattern khớp."""
-    import tafeng_demo
-    import item_labels
-    exp = tafeng_demo.run_experiment(
-        min_sup=0.01, alpha=0.5, max_customers=req.max_customers,
-        item_col="PRODUCT_SUBCLASS", ks=(5, 10))
-    if "error" in exp:
-        return exp
-    key = tafeng_demo._key(0.01, 0.5, req.max_customers, "PRODUCT_SUBCLASS", (5, 10))
-    d = tafeng_demo._DETAIL[key]
-    predictor = d["predictor"]
-    item_prices = d.get("item_prices") or {}
-    item_counts = d.get("item_counts") or {}
-
-    cart_keys = [str(c) for c in (req.items or []) if str(c).strip()]
-    if not cart_keys:
-        return {"cart": [], "recommendations": [], "matchedPatterns": [], "labels": {}}
-
-    history = [tuple(cart_keys)]
-    raw = predictor.predict(history, top_k=max(req.top_k * 2, 10))
-
-    bset = frozenset(cart_keys)
-    matched = []
-    for last_ante, entries in predictor.index.items():
-        if last_ante.issubset(bset):
-            for consequent, wsup in entries:
-                matched.append({
-                    "ante": [str(i) for i in last_ante],
-                    "consequent": [str(i) for i in consequent],
-                    "wsup": round(float(wsup), 4),
-                })
-    matched.sort(key=lambda m: m["wsup"], reverse=True)
-    matched = matched[:15]
-
-    ref = set(cart_keys)
-    for item, _ in raw:
-        ref.add(str(item))
-    for m in matched:
-        ref.update(m["ante"])
-        ref.update(m["consequent"])
-    labels = item_labels.build_labels(ref, item_prices, item_counts)
-
-    cart_set = set(cart_keys)
-    recommendations = []
-    for item, score in raw:
-        code = str(item)
-        if code in cart_set:
-            continue
-        recommendations.append({
-            "code": code,
-            "score": round(float(score), 4),
-            "name": labels.get(code, {}).get("name", code),
-            "price": labels.get(code, {}).get("price"),
-            "count": labels.get(code, {}).get("count"),
-        })
-        if len(recommendations) >= req.top_k:
-            break
-
-    return {
-        "cart": cart_keys,
-        "recommendations": recommendations,
-        "matchedPatterns": matched,
-        "labels": labels,
-    }
-
-
-@app.get("/spade/demo-customers")
-def spade_demo_customers():
-    """Danh sách thẻ thành viên demo (CUSTOMER_ID thật) cho tab Trợ lý Chi tiêu."""
-    import tafeng_demo
-    return {"customerIds": tafeng_demo.DEMO_CUSTOMER_IDS}
-
-
-# ===================== BANK DATA (Nội dung mở rộng) =====================
-@app.get("/bank")
-def bank_dashboard():
-    return FileResponse(os.path.join(BASE_DIR, "bank_dashboard.html"))
-
-
-@app.post("/bank/run")
-def bank_run(req: TafengRequest):
-    import bank_demo
-    return bank_demo.run_experiment(
-        min_sup=req.min_sup, alpha=req.alpha, max_customers=req.max_customers)
-
-
-@app.post("/bank/quality")
-def bank_quality(req: TafengRequest):
-    import json
-    with open(BANK_JSON_PATH, 'r', encoding='utf-8') as f:
-        txs = json.load(f)
-    n_cust = len(set(t['user_id'] for t in txs))
-    return {
-        "rows": {"totalRead": len(txs), "kept": len(txs), "keptPct": 100},
-        "customers": {"nCustomers": n_cust, "ge2Pct": 100},
-        "items": {"priceMin": 0, "priceMax": max(t['amount'] for t in txs)}
-    }
-
-
-@app.post("/bank/apriori")
-def bank_apriori(req: AprioriRequest):
-    import bank_association_rules
-    rules, n = bank_association_rules.run_apriori(
-        min_sup=req.min_sup, min_conf=req.min_conf, max_rows=req.max_rows)
-    return {"rules": rules[:50], "n_transactions": n}
-
-
-@app.post("/bank/regression")
-def bank_regression(req: RegressionRequest):
-    import bank_regression
-    return bank_regression.run_regression(max_customers=req.max_customers)
-
-
-@app.post("/bank/classify")
-def bank_classify(req: TafengClassifyRequest):
-    import bank_classification
-    return bank_classification.run(max_customers=req.max_customers)
-
-
-@app.post("/bank/predict")
-def bank_predict(req: TafengPredictRequest):
-    import bank_demo
-    return bank_demo.predict_customer(
-        customer_idx=req.customer_idx, top_k=req.top_k)
-
-
-@app.get("/bank/demo-customers")
-def bank_demo_customers():
-    import bank_demo
-    return {"customerIds": bank_demo.DEMO_CUSTOMER_IDS}
 
 
 if __name__ == "__main__":
-    uvicorn.run("ai_service", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("ai_service:app", host="0.0.0.0", port=8000, reload=True)
