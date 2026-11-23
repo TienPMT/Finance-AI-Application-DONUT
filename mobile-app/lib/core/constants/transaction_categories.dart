@@ -1,0 +1,219 @@
+import 'package:flutter/material.dart';
+
+import 'package:finance_ai_app/l10n/app_localizations.dart';
+import 'package:finance_ai_app/services/remote_api_helper.dart';
+
+class TransactionCategories {
+  static const String all = 'Tất cả';
+
+  /// How the backend labels expense categories in GET /api/categories.
+  static const String serverExpenseType = 'EXPENSE';
+
+  /// Default categories the forms preselect, by the name core-backend stores.
+  static const String food = 'Ăn uống';
+  static const String otherExpense = 'Khác';
+
+  /// Essential default expense categories, by the name core-backend stores (DefaultCategory key in each comment).
+  static const String groceries = 'Siêu thị & Chợ'; // groceries
+  static const String transport = 'Di chuyển'; // transport
+  static const String shopping = 'Mua sắm'; // shopping
+  static const String housing = 'Nhà ở'; // housing
+  static const String utilities = 'Điện nước'; // utilities
+  static const String telecom = 'Internet & Điện thoại'; // telecom
+  static const String health = 'Sức khỏe'; // health
+  static const String education = 'Giáo dục'; // education
+  static const String family = 'Gia đình & Con cái'; // family
+  static const String insurance = 'Bảo hiểm'; // insurance
+
+  /// The other default categories the icons and the English names are keyed by (stored name, DefaultCategory key).
+  static const String entertainment = 'Giải trí'; // entertainment
+  static const String travel = 'Du lịch'; // travel
+  static const String social = 'Hiếu hỉ'; // social
+  static const String salary = 'Lương'; // salary
+  static const String bonus = 'Thưởng'; // bonus
+  static const String business = 'Kinh doanh'; // business
+  static const String investment = 'Đầu tư'; // investment
+  static const String gift = 'Được tặng'; // gift
+
+  /// Money moved from the wallet into a savings goal (POST /api/savings/{id}/contributions records it).
+  static const String savings = 'Tiết kiệm'; // savings
+
+  /// True when [category] is the savings category (names compare without surrounding spaces).
+  static bool isSavings(String category) => category.trim() == savings;
+
+  /// The default expense categories that are needs (the "50" of the 50/30/20 rule): food, home, bills, getting around,
+  /// health, schooling, children and insurance. Shopping, entertainment, travel, gifts and "Khác" are wants.
+  static const Set<String> essentialExpenses = {
+    food,
+    groceries,
+    transport,
+    housing,
+    utilities,
+    telecom,
+    health,
+    education,
+    family,
+    insurance,
+  };
+
+  /// The default categories, by the Vietnamese name core-backend stores (its DefaultCategory enum, whose stable key is
+  /// in each comment), and their text in the language the app shows. Renaming one there means renaming it here too.
+  static final Map<String, String Function(AppLocalizations)> _labelByName = {
+    all: (loc) => loc.categoryAll,
+    food: (loc) => loc.categoryFood, // food
+    groceries: (loc) => loc.categoryGroceries, // groceries
+    transport: (loc) => loc.categoryTransport, // transport
+    housing: (loc) => loc.categoryHousing, // housing
+    utilities: (loc) => loc.categoryUtilities, // utilities
+    telecom: (loc) => loc.categoryTelecom, // telecom
+    shopping: (loc) => loc.categoryShopping, // shopping
+    health: (loc) => loc.categoryHealth, // health
+    education: (loc) => loc.categoryEducation, // education
+    entertainment: (loc) => loc.categoryEntertainment, // entertainment
+    travel: (loc) => loc.categoryTravel, // travel
+    family: (loc) => loc.categoryFamily, // family
+    social: (loc) => loc.categorySocial, // social
+    insurance: (loc) => loc.categoryInsurance, // insurance
+    savings: (loc) => loc.categorySavings, // savings
+    otherExpense: (loc) => loc.categoryOtherExpense, // other_expense
+    salary: (loc) => loc.categorySalary, // salary
+    bonus: (loc) => loc.categoryBonus, // bonus
+    business: (loc) => loc.categoryBusiness, // business
+    investment: (loc) => loc.categoryInvestment, // investment
+    gift: (loc) => loc.categoryGift, // gift
+    'Thu khác': (loc) => loc.categoryOtherIncome, // other_income
+  };
+
+  /// [name] as the user should read it: a default category (or [all]) in the language of [loc]; a category the user
+  /// created keeps the name they gave it. Only for display: the server still gets and filters by [name].
+  static String displayName(AppLocalizations loc, String name) =>
+      _labelByName[name.trim()]?.call(loc) ?? name;
+
+  static List<String> expenseSelectable = [];
+  static List<String> incomeSelectable = [];
+  static List<String> selectable = [];
+
+  /// Loads the categories of the signed-in user. The cache is replaced only once the server has answered: when the
+  /// request fails it keeps what it holds, so a flaky network never empties the forms and the category grid.
+  static Future<void> loadFromApi() async {
+    final List<Map<String, dynamic>> cats;
+    try {
+      cats = await RemoteApiHelper.instance.fetchCategories();
+    } catch (e) {
+      debugPrint('Lỗi tải danh mục, giữ danh mục đang có: $e');
+      return;
+    }
+
+    final expense = <String>[];
+    final income = <String>[];
+    for (final c in cats) {
+      final name = c['name'].toString();
+      final type = c['type'].toString();
+      if (type == serverExpenseType) {
+        // Contributions are recorded only through a savings goal, never picked by hand.
+        if (!isSavings(name)) expense.add(name);
+      } else {
+        income.add(name);
+      }
+    }
+    expenseSelectable = expense;
+    incomeSelectable = income;
+    selectable = _uniquePreserveOrder([...expense, ...income]);
+  }
+
+  /// Forgets the cached categories. They are the ones of the signed-in user, so they go when the session ends
+  /// (SessionService.clearSession); the screens that need them load them again.
+  static void clear() {
+    expenseSelectable = [];
+    incomeSelectable = [];
+    selectable = [];
+  }
+
+  static List<String> forType({required bool isExpense}) {
+    return isExpense ? expenseSelectable : incomeSelectable;
+  }
+
+  static List<String> _uniquePreserveOrder(List<String> input) {
+    final seen = <String>{};
+    final output = <String>[];
+    for (final item in input) {
+      if (seen.add(item)) output.add(item);
+    }
+    return output;
+  }
+
+  /// The icon of each default category, by the name core-backend stores. "Khác" and "Thu khác" are left out on
+  /// purpose: they show the neutral icon.
+  static const Map<String, IconData> _iconByName = {
+    food: Icons.fastfood_rounded,
+    groceries: Icons.shopping_cart_rounded,
+    transport: Icons.directions_car_rounded,
+    housing: Icons.house_rounded,
+    utilities: Icons.bolt_rounded,
+    telecom: Icons.wifi_rounded,
+    shopping: Icons.shopping_bag_rounded,
+    health: Icons.medical_services_rounded,
+    education: Icons.school_rounded,
+    entertainment: Icons.sports_esports_rounded,
+    travel: Icons.flight_takeoff_rounded,
+    family: Icons.family_restroom_rounded,
+    social: Icons.celebration_rounded,
+    insurance: Icons.shield_rounded,
+    savings: Icons.savings_rounded,
+    salary: Icons.monetization_on_rounded,
+    bonus: Icons.card_giftcard_rounded,
+    business: Icons.store_rounded,
+    investment: Icons.trending_up_rounded,
+    gift: Icons.redeem_rounded,
+  };
+
+  /// The icon of [category]: a default one by its exact name, else a guess from the words of a name the user chose.
+  static IconData iconFor(String category) {
+    final exact = _iconByName[category.trim()];
+    if (exact != null) return exact;
+    final c = category.toLowerCase();
+
+    if (c == 'tất cả') return Icons.filter_list_rounded;
+
+    if (c.contains('ăn') ||
+        c.contains('uống') ||
+        c.contains('phê') ||
+        c.contains('vặt')) {
+      return Icons.fastfood_rounded;
+    }
+    if (c.contains('đi') || c.contains('xe') || c.contains('xăng')) {
+      return Icons.local_gas_station_rounded;
+    }
+    if (c.contains('hóa đơn') ||
+        c.contains('điện') ||
+        c.contains('nước') ||
+        c.contains('internet')) {
+      return Icons.receipt_rounded;
+    }
+    if (c.contains('y tế') || c.contains('sức khỏe')) {
+      return Icons.medical_services_rounded;
+    }
+    if (c.contains('giáo dục') || c.contains('học')) {
+      return Icons.school_rounded;
+    }
+    if (c.contains('nhà ở')) return Icons.house_rounded;
+    if (c.contains('mua sắm') ||
+        c.contains('quần áo') ||
+        c.contains('shopping')) {
+      return Icons.shopping_bag_rounded;
+    }
+    if (c.contains('giải trí') || c.contains('game') || c.contains('đồ chơi')) {
+      return Icons.sports_esports_rounded;
+    }
+    if (c.contains('du lịch')) return Icons.flight_takeoff_rounded;
+    if (c.contains('làm đẹp')) return Icons.face_retouching_natural_rounded;
+    if (c.contains('tiết kiệm')) return Icons.savings_rounded;
+
+    if (c.contains('lương') || c.contains('thu nhập')) {
+      return Icons.monetization_on_rounded;
+    }
+    if (c.contains('thưởng')) return Icons.card_giftcard_rounded;
+
+    return Icons.label_important_rounded;
+  }
+}
